@@ -937,15 +937,9 @@ namespace CountriesServers.DAL
             paramDic.Add("@UserId", userId);
 
             paramDic.Add(
-                "@LanguageCode",
-                languageCode
-            );
+                "@LanguageCode",languageCode);
 
-            cmd = CreateCommandWithStoredProcedureGeneral(
-                "SP_UserLanguages_Remove",
-                con,
-                paramDic
-            );
+            cmd = CreateCommandWithStoredProcedureGeneral("SP_UserLanguages_Remove",con, paramDic);
 
             try
             {

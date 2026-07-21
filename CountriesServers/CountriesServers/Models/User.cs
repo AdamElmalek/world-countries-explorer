@@ -27,10 +27,7 @@ namespace CountriesServers.Models
 
         public DateTime LastLoginAt { get; set; }
 
-        // =====================================================
         // Constructors
-        // =====================================================
-
         /*
          * empty constructor when it converts
          * JSON received from the Client into a User object.
@@ -50,13 +47,7 @@ namespace CountriesServers.Models
             LastLoginAt = DateTime.MinValue;
         }
 
-        /*
-         * Useful when creating a User for registration.
-         */
-        public User(
-            string fullName,
-            string email,
-            string password)
+        public User(string fullName, string email,string password)
         {
             UserId = 0;
             FullName = fullName;
@@ -75,17 +66,7 @@ namespace CountriesServers.Models
          * Useful when DBservices reads a complete user
          * from SP_Users_GetByEmail.
          */
-        public User(
-            int userId,
-            string fullName,
-            string email,
-            string passwordHash,
-            string role,
-            bool isLocked,
-            bool canShare,
-            DateTime createdAt,
-            DateTime updatedAt,
-            DateTime lastLoginAt)
+        public User(int userId,string fullName,string email,string passwordHash,string role,bool isLocked, bool canShare,DateTime createdAt,DateTime updatedAt,DateTime lastLoginAt)
         {
             UserId = userId;
             FullName = fullName;
@@ -100,13 +81,12 @@ namespace CountriesServers.Models
             LastLoginAt = lastLoginAt;
         }
 
-        // =====================================================
         // Register
-        // =====================================================
+        
 
         /*
          * Returns:
-         *
+         
          * positive number = new UserId
          * -1              = email already exists
          * 0               = invalid information or failure
@@ -155,9 +135,8 @@ namespace CountriesServers.Models
             return result;
         }
 
-        // =====================================================
-        // Login
-        // =====================================================
+        // Login method
+        
 
         public User? Login()
         {
@@ -169,14 +148,8 @@ namespace CountriesServers.Models
                 return null;
             }
 
-            DBservices dbs = new DBservices();
-
-            /*
-             * SQL searches only by email and returns
-             * the stored PasswordHash.
-             */
+            DBservices dbs = new DBservices();           
             User? storedUser = dbs.GetUserByEmail(Email);
-
             if (storedUser == null)
             {
                 Password = string.Empty;
@@ -199,12 +172,7 @@ namespace CountriesServers.Models
             if (!passwordIsCorrect)
             {
                 return null;
-            }
-
-            /*
-             * Return the locked user to the Controller.
-             * The Controller will return HTTP 403.
-             */
+            }          
             if (storedUser.IsLocked)
             {
                 storedUser.Password = string.Empty;
@@ -213,10 +181,7 @@ namespace CountriesServers.Models
                 return storedUser;
             }
 
-            /*
-             * Recording the login is secondary.
-             * A logging failure must not reject a valid login.
-             */
+            
             try
             {
                 bool loginRecorded =
@@ -241,9 +206,8 @@ namespace CountriesServers.Models
             return storedUser;
         }
 
-        // =====================================================
         // Get profile
-        // =====================================================
+        
 
         public User? GetById(int userId)
         {
