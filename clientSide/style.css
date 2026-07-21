@@ -1,2 +1,131 @@
-﻿body {
+﻿/*style.css - World Countries Project*/
+body {
+    font-family: Arial, Helvetica, sans-serif;
+    background-color: #f4f7fb;
+    margin: 0;
+    padding: 0;
+    color: #222;
+}
+
+.page {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 15px;
+}
+
+/*  top menu  */
+
+.top-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    background: linear-gradient(90deg, #1f4e79, #2e74b5);
+    color: white;
+    padding: 12px 18px;
+    border-radius: 10px;
+    margin-bottom: 18px;
+}
+
+.menu-links a {
+    color: white;
+    text-decoration: none;
+    margin-left: 14px;
+    font-weight: bold;
+}
+
+    .menu-links a:hover {
+        text-decoration: underline;
+    }
+
+    .menu-links a.active {
+        text-decoration: underline;
+    }
+
+.menu-user {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+    .menu-user span {
+        margin-left: 10px;
+    }
+
+/* buttons  */
+
+input[type=button],
+input[type=submit],
+button {
+    background-color: #2e74b5;
+    color: white;
+    border: none;
+    padding: 8px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+    input[type=button]:hover,
+    input[type=submit]:hover,
+    button:hover {
+        background-color: #1f4e79;
+    }
+
+.delete-btn {
+    background-color: #c0392b;
+}
+
+    .delete-btn:hover {
+        background-color: #96281b;
+    }
+
+.green-btn {
+    background-color: #2e7d32;
+}
+
+    .green-btn:hover {
+        background-color: #1b5e20;
+    }
+
+/* forms*/
+
+.form-box {
+    max-width: 420px;
+    margin: 40px auto;
+    background: white;
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, .12);
+}
+
+    .form-box h1 {
+        color: #1f4e79;
+        margin-top: 0;
+    }
+
+    .form-box input[type=text],
+    .form-box input[type=email],
+    .form-box input[type=password],
+    .card-box input[type=text],
+    .card-box input[type=email],
+    .card-box input[type=password],
+    select {
+        width: 100%;
+        padding: 9px;
+        margin-bottom: 12px;
+        border: 1px solid #cfd8e3;
+        border-radius: 6px;
+        box-sizing: border-box;
+        font-size: 14px;
+    }
+
+.error {
+    color: #c0392b;
+    font-weight: bold;
+}
+
+.success {
+    color: #2e7d32;
+    font-weight: bold;
 }
