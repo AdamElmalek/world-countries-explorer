@@ -248,3 +248,48 @@ button {
     color: #6c757d;
     margin-bottom: 5px;
 }
+
+/*quiz*/
+.quiz-option {
+    display: block;
+    width: 100%;
+    text-align: right;
+    margin-bottom: 8px;
+    padding: 12px;
+    border-radius: 8px;
+    border: 2px solid #d7dfe9;
+    background: white;
+    color: #222;
+    font-size: 15px;
+    cursor: pointer;
+}
+
+    .quiz-option:hover {
+        background: #eaf2fb;
+        border-color: #2e74b5;
+    }
+
+    .quiz-option.correct {
+        border-color: #2e7d32;
+        background: #e8f5e9;
+    }
+
+    .quiz-option.wrong {
+        border-color: #c62828;
+        background: #ffebee;
+    }
+
+.timer {
+    font-size: 20px;
+    font-weight: bold;
+    color: #1f4e79;
+    border: 2px solid #2e74b5;
+    border-radius: 999px;
+    padding: 6px 16px;
+    background: white;
+}
+
+    .timer.danger {
+        color: #c62828;
+        border-color: #c62828;
+    }
