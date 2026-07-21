@@ -1,4 +1,6 @@
-﻿namespace CountriesServers.Models
+﻿using CountriesServers.DAL;
+
+namespace CountriesServers.Models
 {
     public class Country
     {
@@ -60,10 +62,10 @@
             UpdatedAt = DateTime.MinValue;
         }
 
-        public Country(int countryId,string name,string nativeName,string alpha2Code,string alpha3Code,
-            string numericCode,string capital,string region,string subregion,long population, decimal area,
-            decimal lat,decimal lng,string flagUrl,string flagPngUrl,string flagEmoji,
-            string demonym,decimal populationDensity,DateTime createdAt, DateTime updatedAt)
+        public Country(int countryId, string name, string nativeName, string alpha2Code, string alpha3Code,
+            string numericCode, string capital, string region, string subregion, long population, decimal area,
+            decimal lat, decimal lng, string flagUrl, string flagPngUrl, string flagEmoji,
+            string demonym, decimal populationDensity, DateTime createdAt, DateTime updatedAt)
         {
             CountryId = countryId;
 
@@ -101,5 +103,87 @@
             UpdatedAt = updatedAt;
 
         }
+
+        //crud methods 
+        public int SaveImportedCountry()
+        {
+            DBservices dbs = new DBservices();
+
+            int countryId = dbs.UpsertCountry(this);
+
+            if (countryId <= 0)
+            {
+                return countryId;
+            }
+
+            CountryId = countryId;
+
+            dbs.DeleteCountryLanguages(countryId);
+
+            foreach (CountryLanguage language in LanguageList)
+            {
+                dbs.AddCountryLanguage(countryId, language);
+            }
+
+            dbs.DeleteCountryCurrencies(countryId);
+
+            foreach (CountryCurrency currency in CurrencyList)
+            {
+                dbs.AddCountryCurrency(countryId, currency);
+            }
+
+            return countryId;
+        }
+
+        public int Insert()
+        {
+            DBservices dbs = new DBservices();
+            return dbs.InsertCountry(this);
+        }
+
+        public int Update()
+        {
+            DBservices dbs = new DBservices();
+            return dbs.UpdateCountry(this);
+        }
+        public bool Delete()
+        {
+            DBservices dbs = new DBservices();
+            return dbs.DeleteCountry(CountryId);
+        }
+
+        public Country? GetById(int countryId)
+        {
+            DBservices dbs = new DBservices();
+            return dbs.GetCountryById(countryId);
+        }
+
+        public List<Country> Search(
+    string search, string region, string language,
+    string currency, long? minPopulation, long? maxPopulation,
+    decimal? minArea, decimal? maxArea, string sortBy, string direction)
+        {
+            DBservices dbs = new DBservices();
+
+            return dbs.SearchCountries(
+                search,
+                region,
+                language,
+                currency,
+                minPopulation,
+                maxPopulation,
+                minArea,
+                maxArea,
+                sortBy,
+                direction
+            );
+        }
+
+        public CountryFilterOptions GetFilterOptions()
+        {
+            DBservices dbs = new DBservices();
+            return dbs.GetCountryFilterOptions();
+        }
+
     }
 }
