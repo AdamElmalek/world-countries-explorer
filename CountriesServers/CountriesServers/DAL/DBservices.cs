@@ -937,9 +937,9 @@ namespace CountriesServers.DAL
             paramDic.Add("@UserId", userId);
 
             paramDic.Add(
-                "@LanguageCode",languageCode);
+                "@LanguageCode", languageCode);
 
-            cmd = CreateCommandWithStoredProcedureGeneral("SP_UserLanguages_Remove",con, paramDic);
+            cmd = CreateCommandWithStoredProcedureGeneral("SP_UserLanguages_Remove", con, paramDic);
 
             try
             {
@@ -1021,5 +1021,316 @@ namespace CountriesServers.DAL
                 dataReader[columnName]
             );
         }
+        private object GetDatabaseValue(string value)
+        {
+            if (value == string.Empty)
+            {
+                return DBNull.Value;
+            }
+
+            return value;
+        }
+        //helper create country params
+        private Dictionary<string, object> CreateCountryParameters(Country country, bool includeCountryId)
+        {
+            Dictionary<string, object> paramDic =
+                new Dictionary<string, object>();
+
+            if (includeCountryId)
+            {
+                paramDic.Add("@CountryId", country.CountryId);
+            }
+
+            paramDic.Add("@Name", country.Name);
+            paramDic.Add("@NativeName", GetDatabaseValue(country.NativeName));
+            paramDic.Add("@Alpha2Code", country.Alpha2Code);
+            paramDic.Add("@Alpha3Code", country.Alpha3Code);
+            paramDic.Add("@NumericCode", GetDatabaseValue(country.NumericCode));
+            paramDic.Add("@Capital", GetDatabaseValue(country.Capital));
+            paramDic.Add("@Region", GetDatabaseValue(country.Region));
+            paramDic.Add("@Subregion", GetDatabaseValue(country.Subregion));
+            paramDic.Add("@Population", country.Population);
+            paramDic.Add("@Area", country.Area);
+            paramDic.Add("@Latitude", country.Lat);
+            paramDic.Add("@Longitude", country.Lng);
+            paramDic.Add("@FlagUrl", GetDatabaseValue(country.FlagUrl));
+            paramDic.Add("@FlagPngUrl", GetDatabaseValue(country.FlagPngUrl));
+            paramDic.Add("@FlagEmoji", GetDatabaseValue(country.FlagEmoji));
+            paramDic.Add("@Demonym", GetDatabaseValue(country.Demonym));
+            paramDic.Add("@PopulationDensity", country.PopulationDensity);
+
+            return paramDic;
+        }
+        //country imporrt method
+        public int UpsertCountry(Country country)
+        {
+            SqlConnection con = new SqlConnection();
+            SqlCommand cmd = new SqlCommand();
+
+            try
+            {
+                con = connect("myProjDB");
+
+                Dictionary<string, object> paramDic =
+                    CreateCountryParameters(country, false);
+
+                cmd = CreateCommandWithStoredProcedureGeneral(
+                    "SP_Countries_Upsert",
+                    con,
+                    paramDic
+                );
+
+                return Convert.ToInt32(cmd.ExecuteScalar());
+            }
+            catch
+            {
+                throw;
+            }
+            finally
+            {
+                cmd.Dispose();
+                con.Close();
+            }
+        }
+
+        //country insert
+        public int InsertCountry(Country country)
+        {
+            SqlConnection con = new SqlConnection();
+            SqlCommand cmd = new SqlCommand();
+
+            try
+            {
+                con = connect("myProjDB");
+
+                Dictionary<string, object> paramDic =
+                    CreateCountryParameters(country, false);
+
+                cmd = CreateCommandWithStoredProcedureGeneral(
+                    "SP_Countries_Insert",
+                    con,
+                    paramDic
+                );
+
+                return Convert.ToInt32(cmd.ExecuteScalar());
+            }
+            catch
+            {
+                throw;
+            }
+            finally
+            {
+                cmd.Dispose();
+                con.Close();
+            }
+        }
+
+        //country update 1= updated, 0=invalid or notfund , -1= dupelicated
+        public int UpdateCountry(Country country)
+        {
+            SqlConnection con = new SqlConnection();
+            SqlCommand cmd = new SqlCommand();
+
+            try
+            {
+                con = connect("myProjDB");
+
+                Dictionary<string, object> paramDic =
+                    CreateCountryParameters(country, true);
+
+                cmd = CreateCommandWithStoredProcedureGeneral(
+                    "SP_Countries_Update",
+                    con,
+                    paramDic
+                );
+
+                return Convert.ToInt32(cmd.ExecuteScalar());
+            }
+            catch
+            {
+                throw;
+            }
+            finally
+            {
+                cmd.Dispose();
+                con.Close();
+            }
+        }
+        //delete country
+        public bool DeleteCountry(int countryId)
+        {
+            SqlConnection con = new SqlConnection();
+            SqlCommand cmd = new SqlCommand();
+
+            try
+            {
+                con = connect("myProjDB");
+
+                Dictionary<string, object> paramDic =
+                   new Dictionary<string, object>();
+                paramDic.Add("@CountryId", countryId);
+
+                cmd = CreateCommandWithStoredProcedureGeneral(
+                    "SP_Countries_Delete",
+                    con,
+                    paramDic
+                );
+
+                int result = Convert.ToInt32(cmd.ExecuteScalar());
+
+                return result == 1;
+            }
+            catch
+            {
+                throw;
+            }
+            finally
+            {
+                cmd.Dispose();
+                con.Close();
+            }
+        }
+        //  country lang methods 
+        public int DeleteCountryLanguages(int countryId)
+        {
+            SqlConnection con = new SqlConnection();
+            SqlCommand cmd = new SqlCommand();
+
+            try
+            {
+                con = connect("myProjDB");
+
+                Dictionary<string, object> paramDic =
+                   new Dictionary<string, object>();
+                paramDic.Add("@CountryId", countryId);
+
+                cmd = CreateCommandWithStoredProcedureGeneral(
+                    "SP_CountryLanguages_DeleteByCountry",
+                    con,
+                    paramDic
+                );
+
+
+                return Convert.ToInt32(cmd.ExecuteScalar());
+            }
+            catch
+            {
+                throw;
+            }
+            finally
+            {
+                cmd.Dispose();
+                con.Close();
+            }
+        }
+
+        public int AddCountryLanguage(int countryId, CountryLanguage language)
+        {
+            SqlConnection con = new SqlConnection();
+            SqlCommand cmd = new SqlCommand();
+
+            try
+            {
+                con = connect("myProjDB");
+
+                Dictionary<string, object> paramDic =
+                   new Dictionary<string, object>();
+
+                paramDic.Add("@CountryId", countryId);
+                paramDic.Add("@LanguageCode", language.LanguageCode);
+                paramDic.Add("@LanguageName", language.LanguageName);
+                paramDic.Add("@NativeName", GetDatabaseValue(language.NativeName));
+
+                cmd = CreateCommandWithStoredProcedureGeneral(
+                    "SP_CountryLanguages_Add",
+                    con,
+                    paramDic
+                );
+
+                return Convert.ToInt32(cmd.ExecuteScalar());
+
+            }
+            catch
+            {
+                throw;
+            }
+            finally
+            {
+                cmd.Dispose();
+                con.Close();
+            }
+        }
+
+        //Countr currencies methods
+        public int DeleteCountryCurrencies(int countryId)
+        {
+            SqlConnection con = new SqlConnection();
+            SqlCommand cmd = new SqlCommand();
+
+            try
+            {
+                con = connect("myProjDB");
+
+                Dictionary<string, object> paramDic =
+                   new Dictionary<string, object>();
+                paramDic.Add("@CountryId", countryId);
+
+                cmd = CreateCommandWithStoredProcedureGeneral(
+                    "SP_CountryCurrencies_DeleteByCountry",
+                    con,
+                    paramDic
+                );
+
+
+                return Convert.ToInt32(cmd.ExecuteScalar());
+            }
+            catch
+            {
+                throw;
+            }
+            finally
+            {
+                cmd.Dispose();
+                con.Close();
+            }
+        }
+
+        public int AddCountryCurrency(int countryId, CountryCurrency currency)
+        {
+            SqlConnection con = new SqlConnection();
+            SqlCommand cmd = new SqlCommand();
+
+            try
+            {
+                con = connect("myProjDB");
+
+                Dictionary<string, object> paramDic =
+                   new Dictionary<string, object>();
+
+                paramDic.Add("@CountryId", countryId);
+                paramDic.Add("@LanguageCode", currency.CurrencyCode);
+                paramDic.Add("@LanguageName", currency.CurrencyName);
+                paramDic.Add("@CurrencySymbol", GetDatabaseValue(currency.CurrencySymbol));
+
+                cmd = CreateCommandWithStoredProcedureGeneral(
+                    "SP_CountryCurrencies_Add",
+                    con,
+                    paramDic
+                );
+
+                return Convert.ToInt32(cmd.ExecuteScalar());
+
+            }
+            catch
+            {
+                throw;
+            }
+            finally
+            {
+                cmd.Dispose();
+                con.Close();
+            }
+        }
+
     }
 }
