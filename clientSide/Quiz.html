@@ -1,0 +1,57 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Quiz - World Countries</title>
+
+    <link rel="stylesheet" href="style.css" />
+
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+    <script src="ajaxCalls.js"></script>
+    <script src="common.js"></script>
+
+    <script>
+        let user = null;
+
+        let quiz = null;          // the quiz that came from the server
+        let currentQuestion = 0;
+        let answers = [];
+        let timerId = null;
+        let secondsLeft = 0;
+        let startTime = 0;
+
+        $(document).ready(function () {
+            if (!requireLogin()) {
+                return;
+            }
+
+            user = getLoggedUser();
+
+            buildMenu("quiz");
+
+            $("#capitalQuizBTN").click(function () {
+                startQuizFunc("capital");
+            });
+
+            $("#flagQuizBTN").click(function () {
+                startQuizFunc("flag");
+            });
+
+            $("#nextBTN").click(nextQuestionFunc);
+
+            $("#playAgainBTN").click(function () {
+                window.location.reload();
+            });
+
+            $("#gameDiv").hide();
+            $("#resultDiv").hide();
+
+            loadScoresFunc("capital");
+        });
+        </script>
+</head>
+<body>
+
+</body>
+</html>
