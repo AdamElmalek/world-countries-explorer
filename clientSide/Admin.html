@@ -167,7 +167,32 @@
                 loadUsersFunc, error);
         }
 
-       
+
+        // Import countries from the API
+
+        function importCountriesFunc() {
+            $("#importBTN").prop("disabled", true);
+            $("#importBTN").val("Importing, please wait...");
+
+            ajaxCall("POST", countriesApi + "/Import", null,
+                importSuccess, importError);
+        }
+
+        function importSuccess(result) {
+            $("#importBTN").prop("disabled", false);
+            $("#importBTN").val("Import countries");
+
+            swal("Done", "The import finished successfully", "success");
+
+            loadStatsFunc();
+        }
+
+        function importError(err) {
+            $("#importBTN").prop("disabled", false);
+            $("#importBTN").val("Import countries");
+
+            error(err);
+        }
 </script>
 </head>
 <body>
