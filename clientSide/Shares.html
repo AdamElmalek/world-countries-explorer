@@ -69,6 +69,68 @@
         $(window).on("beforeunload", function () {
             stopPolling();
         });
+
+
+        // Load and show
+
+        function loadSharesFunc() {
+            ajaxCall("GET", sharesApi, null, loadSharesSuccess, pollingError);
+        }
+
+        function loadSharesSuccess(shares) {
+            // tell the user when new shares arrived through polling
+            if (lastCount > 0 && shares.length > lastCount) {
+                let newOnes = shares.length - lastCount;
+                $("#newSharesPH").html(newOnes + " new share(s) arrived");
+
+                setTimeout(function () {
+                    $("#newSharesPH").html("");
+                }, 4000);
+            }
+
+            lastCount = shares.length;
+            allShares = shares;
+
+            fillCountryDropDown();
+            renderShares();
+        }
+
+        // a failing poll must not spam the user with popups
+        function pollingError(err) {
+            console.log(err);
+            $("#pollingStatusPH").html("Could not reach the server");
+        }
+
+        function fillCountryDropDown() {
+            let current = $("#countryDD").val();
+
+            let names = [];
+
+            for (let i = 0; i < allShares.length; i++) {
+                if (!names.includes(allShares[i].countryName)) {
+                    names.push(allShares[i].countryName);
+                }
+            }
+
+            names.sort();
+
+            let str = "<option value=''>All countries</option>";
+
+            for (let i = 0; i < names.length; i++) {
+                str += `<option value="${names[i]}">${names[i]}</option>`;
+            }
+
+            $("#countryDD").html(str);
+
+            if (current != null) {
+                $("#countryDD").val(current);
+            }
+        }
+
+
+
+
+
 </script>
 </head >
             <body>
