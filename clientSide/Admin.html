@@ -43,6 +43,40 @@
             }
         });
 
+        // Statistics
+        function loadStatsFunc() {
+            ajaxCall("GET", adminApi + "/Stats", null, loadStatsSuccess, statsError);
+        }
+
+        function loadStatsSuccess(stats) {
+            let boxes = [
+                ["Logins today", stats.dailyLogins],
+                ["Countries imported", stats.countriesImported],
+                ["Countries saved in lists", stats.countriesSaved],
+                ["Shares created", stats.sharesCreated]
+            ];
+
+            let str = "";
+
+            for (let i = 0; i < boxes.length; i++) {
+                str += `
+                    <div class="stat-box">
+                        <div class="stat-number">${formatNumber(boxes[i][1])}</div>
+                        <div class="stat-label">${boxes[i][0]}</div>
+                    </div>
+                `;
+            }
+
+            $("#statsPH").html(str);
+
+            let now = new Date();
+            $("#updatedPH").html("Updated at " + now.toLocaleTimeString());
+        }
+
+        function statsError(err) {
+            console.log(err);
+            $("#updatedPH").html("Could not load the statistics");
+        }
 </script>
 </head>
 <body>
