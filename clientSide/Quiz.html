@@ -74,7 +74,26 @@
             startTimer(seconds);
             showQuestion();
         }
+       
+        function startTimer(seconds) {
+            secondsLeft = seconds;
+            $("#timerPH").html(secondsLeft);
+            $("#timerPH").removeClass("danger");
 
+            timerId = setInterval(function () {
+                secondsLeft = secondsLeft - 1;
+                $("#timerPH").html(secondsLeft);
+
+                if (secondsLeft <= 10) {
+                    $("#timerPH").addClass("danger");
+                }
+
+                if (secondsLeft <= 0) {
+                    clearInterval(timerId);
+                    finishQuizFunc(true);
+                }
+            }, 1000);
+        }
 
         </script>
 </head>
