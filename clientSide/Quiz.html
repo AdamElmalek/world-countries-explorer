@@ -195,6 +195,50 @@
             loadScoresFunc(quiz.quizType);
         }
 
+        // High scores
+
+        function loadScoresFunc(quizType) {
+            ajaxCall("GET", quizApi + "/Scores/" + quizType, null,
+                loadScoresSuccess, scoresError);
+        }
+
+        function loadScoresSuccess(scores) {
+            if (scores.length == 0) {
+                $("#scoresPH").html("<p>There are no results yet</p>");
+                return;
+            }
+
+            let str = `
+                <table class="scores-table">
+                    <tr>
+                        <th>#</th>
+                        <th>Name</th>
+                        <th>Score</th>
+                        <th>Time</th>
+                    </tr>
+            `;
+
+            for (let i = 0; i < scores.length; i++) {
+                str += `
+                    <tr>
+                        <td>${i + 1}</td>
+                        <td>${safeText(scores[i].fullName)}</td>
+                        <td>${scores[i].score}</td>
+                        <td>${scores[i].durationSeconds} sec</td>
+                    </tr>
+                `;
+            }
+
+            str += "</table>";
+
+            $("#scoresPH").html(str);
+        }
+
+        function scoresError(err) {
+            console.log(err);
+            $("#scoresPH").html("<p>Could not load the high scores</p>");
+        }
+        
         </script>
 </head>
 <body>
