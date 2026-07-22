@@ -120,6 +120,52 @@
                 swal("Error", "Could not add the country", "error");
             }
         }
+
+
+        // Shares
+        function loadSharesFunc() {
+            ajaxCall("GET", sharesApi + "/ByCountry/" + countryId, null,
+                loadSharesSuccess, error);
+        }
+
+        function loadSharesSuccess(shares) {
+            if (shares.length == 0) {
+                $("#sharesPH").html("<p>There are no shares about this country yet. Be the first!</p>");
+                return;
+            }
+
+            let str = "";
+
+            for (let i = 0; i < shares.length; i++) {
+                let share = shares[i];
+
+                // edit and delete only on your own shares
+                let myButtons = "";
+
+                if (isLoggedIn() && share.userId == user.userId) {
+                    myButtons = `
+                        <button onclick="editShareFunc(${share.shareId})">Edit</button>
+                        <button class="delete-btn" onclick="deleteShareFunc(${share.shareId})">Delete</button>
+                    `;
+                }
+
+                str += `
+                    <div class="share-card">
+                        <div class="share-head">
+                            <strong>${safeText(share.userName)}</strong>
+                            <span>${safeText(share.createdAt)}</span>
+                        </div>
+
+                        <p id="shareText_${share.shareId}">${safeText(share.content)}</p>
+
+                        ${myButtons}
+                    </div>
+                `;
+            }
+
+            $("#sharesPH").html(str);
+        }
+
 </script>
 </head >
             <body>
