@@ -74,7 +74,52 @@
     </script>
 
 </head >
-            <body>
+<body>
+    <div class="page">
+        <div id="menuPH"></div>
 
-            </body>
+        <div class="form-box">
+            <h1>Register</h1>
+
+            <form id="registerForm">
+                <input id="nameTB"
+                       type="text"
+                       placeholder="Full name"
+                       required
+                       minlength="2"
+                       maxlength="100" />
+
+                <input id="emailTB"
+                       type="email"
+                       placeholder="Email"
+                       required
+                       maxlength="255" />
+
+                <!-- at least one capital letter and one digit, 6 characters or more -->
+                <input id="passTB"
+                       type="password"
+                       placeholder="Password"
+                       required
+                       minlength="6"
+                       pattern="(?=.*[A-Z])(?=.*[0-9]).{6,}"
+                       title="At least 6 characters, one capital letter and one digit" />
+
+                <input id="confirmTB"
+                       type="password"
+                       placeholder="Confirm password"
+                       required />
+
+                <input type="submit" value="Register" />
+            </form>
+
+            <p id="msgPH" class="error"></p>
+
+            <p>
+                Already registered?
+                <a href="#" id="loginLink">Login here</a>
+            </p>
+        </div>
+    </div>
+
+</body>
 </html >
