@@ -1,0 +1,51 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Admin - World Countries</title>
+
+    <link rel="stylesheet" href="style.css" />
+
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.10.19/css/jquery.dataTables.min.css" />
+
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.min.js"></script>
+    <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+    <script src="ajaxCalls.js"></script>
+    <script src="common.js"></script>
+
+    <script>
+        let usersTbl = null;
+        let statsPollingId = null;
+
+        const STATS_POLLING_SECONDS = 15;
+
+        $(document).ready(function () {
+            if (!requireAdmin()) {
+                return;
+            }
+
+            buildMenu("admin");
+
+            $("#importBTN").click(importCountriesFunc);
+            $("#refreshBTN").click(loadUsersFunc);
+
+            loadStatsFunc();
+            loadUsersFunc();
+
+            // the statistics refresh by themselves
+            statsPollingId = setInterval(loadStatsFunc, STATS_POLLING_SECONDS * 1000);
+        });
+
+        $(window).on("beforeunload", function () {
+            if (statsPollingId != null) {
+                clearInterval(statsPollingId);
+            }
+        });
+
+</script>
+</head>
+<body>
+
+</body>
+</html>
