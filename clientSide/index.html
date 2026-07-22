@@ -115,6 +115,62 @@
             window.location.href = "country.html?id=" + countryId;
         }
 
+        // Table view (DataTables)
+        function buildDataTable(countriesData) {
+            if (tbl != null) {
+                tbl.destroy();
+                $("#countriesTable tbody").empty();
+            }
+
+            tbl = $("#countriesTable").DataTable({
+                data: countriesData,
+                pageLength: 10,
+                columns: [
+                    {
+                        data: "flagUrl",
+                        render: function (data) {
+                            return `<img src="${data}" width="50" />`;
+                        }
+                    },
+                    { data: "name" },
+                    { data: "capital" },
+                    { data: "region" },
+                    {
+                        data: "population",
+                        render: function (data) {
+                            return formatNumber(data);
+                        }
+                    },
+                    {
+                        data: "area",
+                        render: function (data) {
+                            return formatNumber(data);
+                        }
+                    },
+                    {
+                        data: "countryId",
+                        render: function (data) {
+                            return `<button onclick="openCountryFunc(${data})">Details</button>`;
+                        }
+                    }
+                ]
+            });
+        }
+
+        function toggleViewFunc() {
+            tableMode = !tableMode;
+
+            if (tableMode) {
+                $("#cardsPH").hide();
+                $("#tableDiv").show();
+                $("#toggleViewBTN").val("Cards View");
+            }
+            else {
+                $("#tableDiv").hide();
+                $("#cardsPH").show();
+                $("#toggleViewBTN").val("Table View");
+            }
+        }
         </script>
 </head >
             <body>
