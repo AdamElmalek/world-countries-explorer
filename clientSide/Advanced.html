@@ -112,6 +112,39 @@
                 To complete: replace this section with the exact description of
                 the AI module you added.
             </p>
+            <!-- ---------- 5. technical ---------- -->
+            <div class="card-box">
+                <h2>5. Technical Highlights</h2>
+
+                <ul>
+                    <li>
+                        <strong>Password security:</strong> passwords are stored only
+                        as a hash. The verification is done on the server in C# and
+                        never inside an SQL query.
+                    </li>
+                    <li>
+                        <strong>Three layer architecture:</strong> a clear separation
+                        between the Controllers, the model logic and the DAL. Every
+                        database access goes through stored procedures with
+                        parameters, which protects against SQL injection.
+                    </li>
+                    <li>
+                        <strong>Data binding:</strong> the countries list and the
+                        users table use DataTables, with a switch between a card view
+                        and a table view.
+                    </li>
+                    <li>
+                        <strong>One AJAX layer:</strong> all the calls to the server
+                        go through a single <code>ajaxCall</code> function, and all
+                        the addresses are defined once in <code>common.js</code>.
+                    </li>
+                </ul>
+            </div>
+
+            <p class="error">
+                Note: update this page according to the features you actually
+                implement. This page is required by the project instructions.
+            </p>
         </div>
     </div>
 </body>
