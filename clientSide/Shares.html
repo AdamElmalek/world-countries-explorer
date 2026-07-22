@@ -126,6 +126,66 @@
                 $("#countryDD").val(current);
             }
         }
+        function renderShares() {
+            let countryFilter = $("#countryDD").val();
+            let textFilter = $("#textTB").val().trim();
+
+            let shares = [];
+
+            for (let i = 0; i < allShares.length; i++) {
+                let share = allShares[i];
+
+                let countryOk = (countryFilter == "" || share.countryName == countryFilter);
+                let textOk = (textFilter == "" || share.content.indexOf(textFilter) > -1);
+
+                if (countryOk && textOk) {
+                    shares.push(share);
+                }
+            }
+
+            $("#countPH").html("Showing " + shares.length + " shares");
+
+            if (shares.length == 0) {
+                $("#feedPH").html("<p>No shares were found</p>");
+                return;
+            }
+
+            let str = "";
+
+            for (let i = 0; i < shares.length; i++) {
+                let share = shares[i];
+
+                let myButtons = "";
+
+                if (isLoggedIn() && share.userId == user.userId) {
+                    myButtons = `
+                        <button onclick="editShareFunc(${share.shareId})">Edit</button>
+                        <button class="delete-btn" onclick="deleteShareFunc(${share.shareId})">Delete</button>
+                    `;
+                }
+
+                str += `
+                    <div class="share-card">
+                        <div class="share-head">
+                            <span>
+                                <strong>${safeText(share.userName)}</strong>
+                                about
+                                <a href="country.html?id=${share.countryId}">
+                                    ${safeText(share.countryName)}
+                                </a>
+                            </span>
+                            <span>${safeText(share.createdAt)}</span>
+                        </div>
+
+                        <p id="shareText_${share.shareId}">${safeText(share.content)}</p>
+
+                        ${myButtons}
+                    </div>
+                `;
+            }
+
+            $("#feedPH").html(str);
+        }
 
 
 
