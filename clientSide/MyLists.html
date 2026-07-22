@@ -36,6 +36,18 @@
 
             showTab("Visited");
         });
+
+        function showTab(listType) {
+            if (listType == "Visited") {
+                $("#visitedPH").show();
+                $("#wantPH").hide();
+            }
+            else {
+                $("#visitedPH").hide();
+                $("#wantPH").show();
+            }
+        }
+
 </script>
 </head>
 <body>
