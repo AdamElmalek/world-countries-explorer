@@ -2,9 +2,41 @@
 <html>
 <head>
     <meta charset="utf-8" />
-    <title></title>
-</head>
-<body>
+    <title>World Countries</title>
 
-</body>
-</html>
+    <link rel="stylesheet" href="style.css" />
+
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.10.19/css/jquery.dataTables.min.css" />
+
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.min.js"></script>
+    <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+    <script src="ajaxCalls.js"></script>
+    <script src="common.js"></script>
+    <script>
+        let countries = [];
+        let tbl = null;
+        let tableMode = false;
+
+        $(document).ready(function () {
+            buildMenu("countries");
+
+            $("#searchBTN").click(loadCountriesFunc);
+            $("#clearBTN").click(clearFiltersFunc);
+            $("#toggleViewBTN").click(toggleViewFunc);
+
+            // search while typing
+            $("#searchTB").on("input", loadCountriesFunc);
+            $("#regionDD, #sortByDD, #dirDD").change(loadCountriesFunc);
+
+            $("#tableDiv").hide();
+
+            loadFilterOptionsFunc();
+            loadCountriesFunc();
+        });
+        </script>
+</head >
+            <body>
+
+            </body>
+</html >
