@@ -136,6 +136,27 @@
 
             buttonEvents();
         }
+        function buttonEvents() {
+            $(document).off("click", ".lockBTN");
+            $(document).off("click", ".shareBTN");
+
+            $(document).on("click", ".lockBTN", function () {
+                let userId = this.getAttribute("data-userid");
+                let value = (this.getAttribute("data-value") == "true");
+
+                setLockedFunc(userId, value);
+            });
+
+            $(document).on("click", ".shareBTN", function () {
+                let userId = this.getAttribute("data-userid");
+                let value = (this.getAttribute("data-value") == "true");
+
+                setCanShareFunc(userId, value);
+            });
+        }
+
+        function setLockedFunc(userId, isLocked) {
+            let request = { isLocked: isLocked };
 
 </script>
 </head>
