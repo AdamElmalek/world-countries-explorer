@@ -1840,7 +1840,7 @@ namespace CountriesServers.DAL
             }
         }
 
-        public bool MoveCountryToList(int userId, int countryId)
+        public bool RemoveCountryFromList(int userId, int countryId)
         {
             SqlConnection con = new SqlConnection();
             SqlCommand cmd = new SqlCommand();
