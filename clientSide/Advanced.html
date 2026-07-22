@@ -18,6 +18,101 @@
     </script>
 </head>
 <body>
+    <div class="page">
+        <div id="menuPH"></div>
 
+        <h1>Advanced Features</h1>
+
+        <p>
+            In addition to the required basic functionality, the following
+            features were added to the system.
+        </p>
+
+        <!-- ---------- 1. map ---------- -->
+        <div class="card-box">
+            <h2>1. Interactive Map</h2>
+
+            <p>
+                A world map built with the <strong>Leaflet</strong> library and
+                open OpenStreetMap tiles. Every country is placed using the
+                Lat / Lng coordinates that are saved in the database when the
+                countries are imported from the API on the server side.
+            </p>
+
+            <ul>
+                <li>
+                    Markers are coloured by the personal lists of the logged-in user:
+                    green for "Visited", blue for "Want to visit".
+                </li>
+                <li>The map can be filtered by region.</li>
+                <li>
+                    Clicking a marker opens the flag, capital, population and a
+                    link to the country page.
+                </li>
+            </ul>
+
+            <input type="button" value="Go to the map"
+                   onclick="window.location.href='Map.html'" />
+        </div>
+
+        <!-- ---------- 2. quizzes ---------- -->
+        <div class="card-box">
+            <h2>2. Timed Quizzes</h2>
+
+            <p>
+                Two quizzes are built dynamically from the country data in the
+                database: <strong>Guess the Capital</strong> and
+                <strong>Guess the Flag</strong>. The questions and the wrong
+                answers are chosen randomly on the server, so every game is
+                different.
+            </p>
+
+            <p>
+                <strong>Security:</strong> the time limit is checked on the
+                server and not only by the timer in the browser, so a player
+                cannot pass the limit by changing the page. Results are saved
+                and shown in a high score table.
+            </p>
+        </div>
+
+        <!-- ---------- 3. realtime ---------- -->
+        <div class="card-box">
+            <h2>3. Real Time Updates (Polling)</h2>
+
+            <p>
+                The shares page asks the server for new content every 10 seconds
+                using <strong>polling</strong>, so shares written by other users
+                appear without refreshing the page. A message tells the user how
+                many new shares arrived, and live updates can be switched off.
+            </p>
+
+            <p>
+                The administration statistics use the same technique and refresh
+                every 15 seconds.
+            </p>
+        </div>
+
+        <!-- ---------- 4. AI ---------- -->
+        <div class="card-box">
+            <h2>4. Artificial Intelligence Module</h2>
+
+            <p>
+                A language model is used to enrich the content of the site:
+            </p>
+
+            <ul>
+                <li>An automatic travel summary for each country on the details page.</li>
+                <li>
+                    Destination recommendations based on the continents and
+                    languages the user saved in the preferences.
+                </li>
+            </ul>
+
+            <p class="error">
+                To complete: replace this section with the exact description of
+                the AI module you added.
+            </p>
+        </div>
+    </div>
 </body>
 </html>
