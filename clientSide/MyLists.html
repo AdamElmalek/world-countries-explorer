@@ -110,6 +110,43 @@
             $(placeHolder).html(str);
         }
 
+
+        // Move and remove
+
+        function moveCountryFunc(countryId, fromType, toType) {
+            let request = {
+                userId: user.userId,
+                countryId: countryId,
+                fromType: fromType,
+                toType: toType
+            };
+
+            ajaxCall("PUT", listsApi + "/Move", request, reloadBothLists, error);
+        }
+
+        function removeCountryFunc(countryId, listType) {
+            swal({
+                title: "Remove this country?",
+                icon: "warning",
+                buttons: true,
+                dangerMode: true
+            })
+                .then(function (willRemove) {
+                    if (willRemove) {
+                        ajaxCall("DELETE",
+                            listsApi + "?userId=" + user.userId +
+                            "&countryId=" + countryId +
+                            "&listType=" + listType,
+                            null, reloadBothLists, error);
+                    }
+                });
+        }
+
+        function reloadBothLists(result) {
+            loadListFunc("Visited");
+            loadListFunc("WantToVisit");
+        }
+
 </script>
 </head>
 <body>
