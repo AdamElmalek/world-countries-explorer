@@ -126,3 +126,42 @@ function buildMenu(activePage) {
 
     $("#menuPH").html(str);
 }
+
+
+// Small helpers
+
+// Numbers with thousands separators
+function formatNumber(num) {
+    if (num == null) {
+        return "0";
+    }
+
+    return Number(num).toLocaleString();
+}
+
+// Protects against HTML injected by other users (shares, names)
+function safeText(text) {
+    if (text == null) {
+        return "";
+    }
+
+    return $("<div>").text(text).html();
+}
+
+// Reads a value from the address bar, e.g. country.html?id=3
+function getQueryParam(name) {
+    let params = new URLSearchParams(window.location.search);
+    return params.get(name);
+}
+
+// The standard error callback used by every page
+function error(err) {
+    console.log(err);
+
+    if (err != null && err.responseText) {
+        swal("Error", err.responseText, "error");
+    }
+    else {
+        swal("Error", "The server could not be reached", "error");
+    }
+}
