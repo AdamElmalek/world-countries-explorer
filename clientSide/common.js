@@ -76,3 +76,53 @@ function logoutSuccess() {
     clearLoggedUser();
     window.location.href = "Login.html";
 }
+
+
+// Top menu — every page calls buildMenu("pageKey")
+function buildMenu(activePage) {
+    let user = getLoggedUser();
+
+    let pages = [
+        ["index.html", "Countries", "countries", false],
+        ["MyLists.html", "My Lists", "lists", true],
+        ["Shares.html", "Shares", "shares", false],
+        ["Quiz.html", "Quiz", "quiz", true],
+        ["Map.html", "Map", "map", false],
+        ["Advanced.html", "Advanced Features", "advanced", false]
+    ];
+
+    let str = "<div class='top-row'><div class='menu-links'>";
+
+    for (let i = 0; i < pages.length; i++) {
+        let needsLogin = pages[i][3];
+
+        if (needsLogin && !isLoggedIn()) {
+            continue;
+        }
+
+        let activeClass = (pages[i][2] == activePage) ? "active" : "";
+
+        str += `<a class="${activeClass}" href="${pages[i][0]}">${pages[i][1]}</a>`;
+    }
+
+    if (isAdmin()) {
+        let activeClass = (activePage == "admin") ? "active" : "";
+        str += `<a class="${activeClass}" href="Admin.html">Admin</a>`;
+    }
+
+    str += "</div><div class='menu-user'>";
+
+    if (user == null) {
+        str += "<span>Hello guest</span>";
+        str += "<input type='button' value='Login' onclick=\"window.location.href='Login.html'\" />";
+    }
+    else {
+        str += "<span>Hello " + user.fullName + "</span>";
+        str += "<input type='button' value='My Profile' onclick=\"window.location.href='Profile.html'\" />";
+        str += "<input type='button' value='LogOut' onclick='logoutFunc()' />";
+    }
+
+    str += "</div></div>";
+
+    $("#menuPH").html(str);
+}
