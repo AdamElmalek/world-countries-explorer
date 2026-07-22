@@ -1,0 +1,40 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>My Profile - World Countries</title>
+
+    <link rel="stylesheet" href="style.css" />
+
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+    <script src="ajaxCalls.js"></script>
+    <script src="common.js"></script>
+
+    <script>
+        let user = null;
+
+        $(document).ready(function () {
+            if (!requireLogin()) {
+                return;
+            }
+
+            user = getLoggedUser();
+
+            buildMenu("");
+
+            $("#profileForm").submit(updateProfileFunc);
+            $("#passwordForm").submit(changePasswordFunc);
+            $("#languageForm").submit(addLanguageFunc);
+            $("#addContinentBTN").click(addContinentFunc);
+
+            loadProfileFunc();
+            loadContinentsFunc();
+            loadLanguagesFunc();
+        });
+        </script>
+</head>
+<body>
+
+</body>
+</html>
