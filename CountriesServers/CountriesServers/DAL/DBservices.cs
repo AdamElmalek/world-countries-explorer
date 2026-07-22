@@ -219,12 +219,10 @@ namespace CountriesServers.DAL
             }
         }
 
-        // =====================================================
         // 3. Get user by ID
         // SP_Users_GetById
-        //
+
         // PasswordHash is not returned by this SP.
-        // =====================================================
 
         public User? GetUserById(int userId)
         {
@@ -335,7 +333,6 @@ namespace CountriesServers.DAL
             }
         }
 
-        // =====================================================
         // 4. Update user profile
         // SP_Users_UpdateProfile
 
@@ -451,12 +448,11 @@ namespace CountriesServers.DAL
             }
         }
 
-        // =====================================================
         // 6. Record successful login
         // SP_Users_LogLogin
         //
         // Returns true when the login was recorded.
-        // =====================================================
+
 
         public bool LogUserLogin(int userId)
         {
@@ -630,10 +626,10 @@ namespace CountriesServers.DAL
             }
         }
 
-        // =====================================================
+
         // 9. Remove continent preference
         // SP_UserContinents_Remove
-        // =====================================================
+
 
         public bool RemoveUserContinent(
             int userId,
@@ -689,10 +685,8 @@ namespace CountriesServers.DAL
             }
         }
 
-        // =====================================================
         // 10. Get user languages
         // SP_UserLanguages_GetByUser
-        // =====================================================
 
         public List<UserLanguage> GetUserLanguages(int userId)
         {
@@ -765,7 +759,6 @@ namespace CountriesServers.DAL
             }
         }
 
-        // =====================================================
         // 11. Add user language
         // SP_UserLanguages_Add
         //
@@ -773,7 +766,6 @@ namespace CountriesServers.DAL
         // positive number = new UserLanguageId
         // -1              = duplicate
         // 0               = no result
-        // =====================================================
 
         public int AddUserLanguage(
             int userId,
@@ -839,10 +831,8 @@ namespace CountriesServers.DAL
             }
         }
 
-        // =====================================================
         // 12. Update user language
         // SP_UserLanguages_Update
-        // =====================================================
 
         public bool UpdateUserLanguage(
             int userId,
@@ -904,10 +894,8 @@ namespace CountriesServers.DAL
             }
         }
 
-        // =====================================================
         // 13. Remove user language
         // SP_UserLanguages_Remove
-        // =====================================================
 
         public bool RemoveUserLanguage(
             int userId,
@@ -957,9 +945,7 @@ namespace CountriesServers.DAL
             }
         }
 
-        // =====================================================
         // Create command with stored procedure
-        // =====================================================
 
         private SqlCommand CreateCommandWithStoredProcedureGeneral(
             string spName,
@@ -986,9 +972,8 @@ namespace CountriesServers.DAL
             return cmd;
         }
 
-        // =====================================================
         // Reader helper methods
-        // =====================================================
+
 
         private string ReadString(
             SqlDataReader dataReader,
@@ -1696,6 +1681,231 @@ namespace CountriesServers.DAL
                 }
 
                 return options;
+            }
+            catch
+            {
+                throw;
+            }
+            finally
+            {
+                cmd.Dispose();
+                con.Close();
+            }
+        }
+
+        public int AddCountryToList(int userId, int countryId, string listType)
+        {
+            SqlConnection con = new SqlConnection();
+            SqlCommand cmd = new SqlCommand();
+
+            try
+            {
+                con = connect("myProjDB");
+
+                Dictionary<string, object> paramDic = new Dictionary<string, object>();
+
+
+                paramDic.Add("@CountryId", countryId);
+                paramDic.Add("@UserId", userId);
+                paramDic.Add("@ListType", listType);
+
+                cmd = CreateCommandWithStoredProcedureGeneral("SP_UserCountryLists_Add", con, paramDic);
+
+                return Convert.ToInt32(cmd.ExecuteScalar());
+
+
+            }
+            catch
+            {
+                throw;
+            }
+            finally
+            {
+                cmd.Dispose();
+                con.Close();
+            }
+        }
+
+        public List<UserCountryList> GetCountriesByListType(int userId, string listType)
+        {
+            SqlConnection con = new SqlConnection();
+            SqlCommand cmd = new SqlCommand();
+
+            List<UserCountryList> userCountries = new List<UserCountryList>();
+
+            try
+            {
+                con = connect("myProjDB");
+
+                Dictionary<string, object> paramDic = new Dictionary<string, object>();
+                paramDic.Add("@UserId", userId);
+                paramDic.Add("@ListType", listType);
+
+                cmd = CreateCommandWithStoredProcedureGeneral("SP_UserCountryLists_GetByType", con, paramDic);
+
+                using SqlDataReader dataReader = cmd.ExecuteReader();
+
+                while (dataReader.Read())
+                {
+                    UserCountryList userCountry = new UserCountryList();
+
+                    userCountry.UserCountryListId = Convert.ToInt32(dataReader["UserCountryListId"]);
+                    userCountry.UserId = Convert.ToInt32(dataReader["UserId"]);
+                    userCountry.CountryId = Convert.ToInt32(dataReader["CountryId"]);
+
+                    userCountry.ListType = ReadString(dataReader, "ListType");
+                    userCountry.SavedAt = Convert.ToDateTime(dataReader["SavedAt"]);
+
+                    Country country = new Country();
+
+                    country.CountryId = userCountry.CountryId;
+                    country.Name = ReadString(dataReader, "Name");
+                    country.NativeName = ReadString(dataReader, "NativeName");
+                    country.Alpha2Code = ReadString(dataReader, "Alpha2Code");
+                    country.Alpha3Code = ReadString(dataReader, "Alpha3Code");
+                    country.Capital = ReadString(dataReader, "Capital");
+                    country.Region = ReadString(dataReader, "Region");
+                    country.Subregion = ReadString(dataReader, "Subregion");
+
+                    if (dataReader["Population"] != DBNull.Value)
+                    {
+                        country.Population = Convert.ToInt64(dataReader["Population"]);
+
+                    }
+
+                    if (dataReader["Area"] != DBNull.Value)
+                    {
+                        country.Area = Convert.ToDecimal(dataReader["Area"]);
+
+                    }
+
+                    country.FlagUrl = ReadString(dataReader, "FlagUrl");
+
+
+                    country.FlagPngUrl = ReadString(dataReader, "FlagPngUrl");
+
+
+                    country.FlagEmoji = ReadString(dataReader, "FlagEmoji");
+
+
+                    userCountry.Country = country;
+
+                    userCountries.Add(userCountry);
+                }
+                return userCountries;
+
+            }
+            catch
+            {
+                throw;
+            }
+            finally
+            {
+                cmd.Dispose();
+                con.Close();
+            }
+        }
+
+        public bool MoveCountryToList(int userId, int countryId, string toType)
+        {
+            SqlConnection con = new SqlConnection();
+            SqlCommand cmd = new SqlCommand();
+
+            try
+            {
+                con = connect("myProjDB");
+
+                Dictionary<string, object> paramDic = new Dictionary<string, object>();
+
+
+                paramDic.Add("@UserId", userId);
+                paramDic.Add("@CountryId", countryId);
+                paramDic.Add("@ToType", toType);
+
+                cmd = CreateCommandWithStoredProcedureGeneral("SP_UserCountryLists_Move", con, paramDic);
+
+                int result = Convert.ToInt32(cmd.ExecuteScalar());
+
+                return result == 1;
+
+            }
+            catch
+            {
+                throw;
+            }
+            finally
+            {
+                cmd.Dispose();
+                con.Close();
+            }
+        }
+
+        public bool MoveCountryToList(int userId, int countryId)
+        {
+            SqlConnection con = new SqlConnection();
+            SqlCommand cmd = new SqlCommand();
+
+            try
+            {
+                con = connect("myProjDB");
+
+                Dictionary<string, object> paramDic = new Dictionary<string, object>();
+
+
+                paramDic.Add("@UserId", userId);
+                paramDic.Add("@CountryId", countryId);
+
+                cmd = CreateCommandWithStoredProcedureGeneral("SP_UserCountryLists_Remove", con, paramDic);
+
+                int result = Convert.ToInt32(cmd.ExecuteScalar());
+
+                return result == 1;
+
+            }
+            catch
+            {
+                throw;
+            }
+            finally
+            {
+                cmd.Dispose();
+                con.Close();
+            }
+        }
+
+
+        public UserCountryList? GetCountryListStatus(int userId, int countryId)
+        {
+            SqlConnection con = new SqlConnection();
+            SqlCommand cmd = new SqlCommand();
+
+            try
+            {
+                con = connect("myProjDB");
+
+                Dictionary<string, object> paramDic = new Dictionary<string, object>();
+                paramDic.Add("@UserId", userId);
+                paramDic.Add("@CountryId", countryId);
+
+                cmd = CreateCommandWithStoredProcedureGeneral("SP_UserCountryLists_GetCountryStatus", con, paramDic);
+
+                using SqlDataReader dataReader = cmd.ExecuteReader();
+
+                while (dataReader.Read())
+                {
+                    UserCountryList userCountry = new UserCountryList();
+
+                    userCountry.UserCountryListId = Convert.ToInt32(dataReader["UserCountryListId"]);
+                    userCountry.UserId = Convert.ToInt32(dataReader["UserId"]);
+                    userCountry.CountryId = Convert.ToInt32(dataReader["CountryId"]);
+
+                    userCountry.ListType = ReadString(dataReader, "ListType");
+                    userCountry.SavedAt = Convert.ToDateTime(dataReader["SavedAt"]);
+
+                    return userCountry;
+
+                }
+                return null;
             }
             catch
             {
