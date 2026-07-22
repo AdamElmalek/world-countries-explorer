@@ -1,0 +1,49 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Map - World Countries</title>
+
+    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+    <script src="ajaxCalls.js"></script>
+    <script src="common.js"></script>
+
+    <script>
+        let user = null;
+        let map = null;
+        let markersLayer = null;
+
+        let countries = [];
+        let listOfCountry = {};   // countryId -> Visited / WantToVisit
+
+        const COLORS = {
+            Visited: "#2e7d32",
+            WantToVisit: "#1565c0",
+            none: "#8a97a8"
+        };
+
+        $(document).ready(function () {
+            buildMenu("map");
+
+            user = getLoggedUser();
+
+            initMap();
+
+            $("#regionDD").change(drawMarkers);
+
+            loadCountriesFunc();
+        });
+
+
+
+        </script>
+</head>
+<body>
+
+</body>
+</html>
