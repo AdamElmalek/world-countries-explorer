@@ -49,6 +49,33 @@
 
             loadScoresFunc("capital");
         });
+
+       
+        function startQuizFunc(quizType) {
+            ajaxCall("GET", quizApi + "/Start/" + quizType, null,
+                startQuizSuccess, error);
+        }
+
+        function startQuizSuccess(quizData) {
+            quiz = quizData;
+            currentQuestion = 0;
+            answers = [];
+            startTime = new Date().getTime();
+
+            $("#chooserDiv").hide();
+            $("#gameDiv").show();
+
+            let seconds = quiz.timeLimitSeconds;
+
+            if (seconds == null) {
+                seconds = 60;
+            }
+
+            startTimer(seconds);
+            showQuestion();
+        }
+
+
         </script>
 </head>
 <body>
