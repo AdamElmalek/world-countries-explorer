@@ -274,6 +274,61 @@
         </script>
 </head>
 <body>
+    <div class="page">
+        <div id="menuPH"></div>
+
+        <h1>My Profile</h1>
+
+        <!-- ---------- personal details ---------- -->
+        <div class="card-box">
+            <h2>Personal details</h2>
+
+            <form id="profileForm">
+                <input id="nameTB"
+                       type="text"
+                       placeholder="Full name"
+                       required
+                       minlength="2"
+                       maxlength="100" />
+
+                <input id="emailTB"
+                       type="email"
+                       placeholder="Email"
+                       required
+                       maxlength="255" />
+
+                <input type="submit" value="Save changes" />
+            </form>
+        </div>
+
+        <!-- ---------- password ---------- -->
+        <div class="card-box">
+            <h2>Change password</h2>
+
+            <form id="passwordForm">
+                <input id="currentPassTB"
+                       type="password"
+                       placeholder="Current password"
+                       required />
+
+                <input id="newPassTB"
+                       type="password"
+                       placeholder="New password"
+                       required
+                       minlength="6"
+                       pattern="(?=.*[A-Z])(?=.*[0-9]).{6,}"
+                       title="At least 6 characters, one capital letter and one digit" />
+
+                <input type="submit" value="Update password" />
+            </form>
+        </div>
+
+
+
+
+
+
+    </div>
 
 </body>
 </html>
