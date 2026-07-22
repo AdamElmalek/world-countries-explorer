@@ -77,6 +77,66 @@
             console.log(err);
             $("#updatedPH").html("Could not load the statistics");
         }
+
+        // Users
+
+        function loadUsersFunc() {
+            ajaxCall("GET", adminApi + "/Users", null, loadUsersSuccess, error);
+        }
+
+        function loadUsersSuccess(users) {
+            if (usersTbl != null) {
+                usersTbl.destroy();
+                $("#usersTable tbody").empty();
+            }
+
+            usersTbl = $("#usersTable").DataTable({
+                data: users,
+                pageLength: 10,
+                columns: [
+                    { data: "userId" },
+                    { data: "fullName" },
+                    { data: "email" },
+                    { data: "role" },
+                    {
+                        data: "isLocked",
+                        render: function (data) {
+                            return data ? "Locked" : "Active";
+                        }
+                    },
+                    {
+                        data: "canShare",
+                        render: function (data) {
+                            return data ? "Yes" : "Blocked";
+                        }
+                    },
+                    {
+                        data: null,
+                        render: function (data, type, row) {
+                            let lockLabel = row.isLocked ? "Unlock" : "Lock";
+                            let shareLabel = row.canShare ? "Block sharing" : "Allow sharing";
+
+                            return `
+                                <button class="lockBTN"
+                                        data-userid="${row.userId}"
+                                        data-value="${!row.isLocked}">
+                                    ${lockLabel}
+                                </button>
+
+                                <button class="shareBTN"
+                                        data-userid="${row.userId}"
+                                        data-value="${!row.canShare}">
+                                    ${shareLabel}
+                                </button>
+                            `;
+                        }
+                    }
+                ]
+            });
+
+            buttonEvents();
+        }
+
 </script>
 </head>
 <body>
