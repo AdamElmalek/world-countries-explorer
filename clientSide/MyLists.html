@@ -81,30 +81,30 @@
                 let country = countries[i];
 
                 str += `
-                    <div class="share-card">
-                        <div class="list-row">
-                            <img src="${safeText(country.flagUrl)}" width="60" />
+                        <div class="share-card">
+                            <div class="list-row">
+                                <img src="${safeText(country.flagUrl)}" width="60" />
 
-                            <div class="list-info">
-                                <a href="country.html?id=${country.countryId}">
-                                    <strong>${safeText(country.name)}</strong>
-                                </a>
-                                <div class="share-head">
-                                    ${safeText(country.capital)} - ${safeText(country.region)}
+                                <div class="list-info">
+                                    <a href="country.html?id=${country.countryId}">
+                                        <strong>${safeText(country.name)}</strong>
+                                    </a>
+                                    <div class="share-head">
+                                        ${safeText(country.capital)} - ${safeText(country.region)}
+                                    </div>
                                 </div>
+
+                                <button onclick="moveCountryFunc(${country.countryId}, '${listType}', '${otherType}')">
+                                    ${otherLabel}
+                                </button>
+
+                                <button class="delete-btn"
+                                        onclick="removeCountryFunc(${country.countryId}, '${listType}')">
+                                    Remove
+                                </button>
                             </div>
-
-                            <button onclick="moveCountryFunc(${country.countryId}, '${listType}', '${otherType}')">
-                                ${otherLabel}
-                            </button>
-
-                            <button class="delete-btn"
-                                    onclick="removeCountryFunc(${country.countryId}, '${listType}')">
-                                Remove
-                            </button>
                         </div>
-                    </div>
-                `;
+                    `;
             }
 
             $(placeHolder).html(str);
@@ -147,9 +147,43 @@
             loadListFunc("WantToVisit");
         }
 
-</script>
-</head>
-<body>
+    </script>
 
+    <style>
+        .list-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .list-info {
+            flex-grow: 1;
+        }
+
+        .tab-buttons {
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+
+
+<body>
+    <div class="page">
+        <div id="menuPH"></div>
+
+        <h1>My Lists</h1>
+
+        <div class="tab-buttons">
+            <input type="button" id="visitedTabBTN" value="Visited" />
+            <span id="visitedCountPH"></span>
+
+            <input type="button" id="wantTabBTN" value="Want to visit" />
+            <span id="wantCountPH"></span>
+        </div>
+
+        <div id="visitedPH"></div>
+        <div id="wantPH"></div>
+    </div>
 </body>
 </html>
