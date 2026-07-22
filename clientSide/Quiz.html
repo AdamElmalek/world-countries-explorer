@@ -157,6 +157,44 @@
                 showQuestion();
             }
         } 
+        function finishQuizFunc(timeIsOver) {
+            clearInterval(timerId);
+
+            let duration = Math.round(
+                (new Date().getTime() - startTime) / 1000
+            );
+
+            let request = {
+                quizType: quiz.quizType,
+                userId: user.userId,
+                answers: answers,
+                durationSeconds: duration
+            };
+
+            $("#gameDiv").hide();
+            $("#resultDiv").show();
+
+            if (timeIsOver) {
+                $("#resultTitlePH").html("Time is over!");
+            }
+            else {
+                $("#resultTitlePH").html("Well done!");
+            }
+
+            ajaxCall("POST", quizApi + "/Answer", request, finishQuizSuccess, error);
+        }
+
+        function finishQuizSuccess(result) {
+            $("#scorePH").html(result.score + " points");
+
+            $("#detailPH").html(
+                "You answered " + result.correct +
+                " out of " + result.total + " correctly"
+            );
+
+            loadScoresFunc(quiz.quizType);
+        }
+
         </script>
 </head>
 <body>
