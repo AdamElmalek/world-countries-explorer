@@ -56,6 +56,65 @@
             // the page still works without the dropdown values
             console.log(err);
         }
+
+        // =====================================================
+        // Load countries
+        // =====================================================
+
+        function loadCountriesFunc() {
+            let query = "?search=" + encodeURIComponent($("#searchTB").val().trim()) +
+                "&region=" + encodeURIComponent($("#regionDD").val()) +
+                "&sortBy=" + $("#sortByDD").val() +
+                "&dir=" + $("#dirDD").val();
+
+            ajaxCall("GET", countriesApi + query, null, getCountriesSuccess, error);
+        }
+
+        function getCountriesSuccess(countriesData) {
+            countries = countriesData;
+
+            $("#countPH").html("Found " + countries.length + " countries");
+
+            renderCards(countries);
+            buildDataTable(countries);
+        }
+
+        function renderCards(countriesData) {
+            if (countriesData.length == 0) {
+                $("#cardsPH").html("<h3>No countries were found</h3>");
+                return;
+            }
+
+            let str = "";
+
+            for (let i = 0; i < countriesData.length; i++) {
+                let country = countriesData[i];
+
+                str += `
+                    <div class="country-card">
+                        <img src="${safeText(country.flagUrl)}" alt="Flag of ${safeText(country.name)}" />
+
+                        <div class="card-body">
+                            <h3>${safeText(country.name)}</h3>
+                            <p>Capital: ${safeText(country.capital)}</p>
+                            <p>Region: ${safeText(country.region)}</p>
+                            <p>Population: ${formatNumber(country.population)}</p>
+
+                            <button onclick="openCountryFunc(${country.countryId})">
+                                View details
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }
+
+            $("#cardsPH").html(str);
+        }
+
+        function openCountryFunc(countryId) {
+            window.location.href = "country.html?id=" + countryId;
+        }
+
         </script>
 </head >
             <body>
