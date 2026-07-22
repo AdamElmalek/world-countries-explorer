@@ -1,0 +1,30 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Register - World Countries</title>
+
+    <link rel="stylesheet" href="style.css" />
+
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+    <script src="ajaxCalls.js"></script>
+    <script src="common.js"></script>
+    <script>
+        $(document).ready(function () {
+            $("#registerForm").submit(registerFunc);
+
+            $("#loginLink").click(function () {
+                window.location.href = "Login.html";
+            });
+
+            // checks that the two passwords are the same
+            $("#passTB, #confirmTB").on("input", checkPasswordsMatch);
+        });
+    </script>
+
+</head >
+            <body>
+
+            </body>
+</html >
