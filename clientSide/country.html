@@ -31,6 +31,7 @@
                 window.location.href = "index.html";
             });
 
+
             // the share form is only shown to a logged-in user
             if (isLoggedIn()) {
                 $("#shareFormDiv").show();
@@ -44,6 +45,55 @@
             loadCountryFunc();
             loadSharesFunc();
         });
+
+
+        // Country details
+        function loadCountryFunc() {
+            ajaxCall("GET", countriesApi + "/" + countryId, null,
+                loadCountrySuccess, error);
+        }
+
+        function loadCountrySuccess(country) {
+            let buttons = "";
+
+            if (isLoggedIn()) {
+                buttons = `
+                    <button class="green-btn" onclick="addToListFunc('Visited')">
+                        I visited
+                    </button>
+                    <button onclick="addToListFunc('WantToVisit')">
+                        Want to visit
+                    </button>
+                `;
+            }
+
+            let str = `
+                <div class="card-box">
+                    <div class="country-details">
+                        <img src="${safeText(country.flagUrl)}" width="260"
+                             alt="Flag of ${safeText(country.name)}" />
+
+                        <div>
+                            <h1>${safeText(country.name)}</h1>
+
+                            <table class="details-table">
+                                <tr><td>Capital</td><td>${safeText(country.capital)}</td></tr>
+                                <tr><td>Region</td><td>${safeText(country.region)}</td></tr>
+                                <tr><td>Languages</td><td>${safeText(country.languages)}</td></tr>
+                                <tr><td>Currencies</td><td>${safeText(country.currencies)}</td></tr>
+                                <tr><td>Population</td><td>${formatNumber(country.population)}</td></tr>
+                                <tr><td>Area</td><td>${formatNumber(country.area)} km²</td></tr>
+                            </table>
+
+                            ${buttons}
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            $("#detailsPH").html(str);
+        }
+
 </script>
 </head >
             <body>
