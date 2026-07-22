@@ -165,6 +165,39 @@
 
             $("#sharesPH").html(str);
         }
+        function addShareFunc() {
+            let content = $("#shareTB").val().trim();
+
+            if (content == "") {
+                swal("Empty", "Please write something to share", "warning");
+                return;
+            }
+
+            let request = {
+                userId: user.userId,
+                countryId: Number(countryId),
+                content: content
+            };
+
+            ajaxCall("POST", sharesApi, request, addShareSuccess, addShareError);
+        }
+
+        function addShareSuccess(result) {
+            $("#shareTB").val("");
+            loadSharesFunc();
+        }
+
+        function addShareError(err) {
+            console.log(err);
+
+            // 403 = the admin blocked this user from sharing
+            if (err.status == 403) {
+                swal("Blocked", "The administrator blocked you from sharing content", "error");
+            }
+            else {
+                swal("Error", "Could not publish your share", "error");
+            }
+        }
 
 </script>
 </head >
