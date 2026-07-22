@@ -50,6 +50,50 @@
             markersLayer = L.layerGroup().addTo(map);
         }
 
+
+        // Load the data
+        function loadCountriesFunc() {
+            ajaxCall("GET", countriesApi, null, loadCountriesSuccess, error);
+        }
+
+        function loadCountriesSuccess(countriesData) {
+            countries = countriesData;
+
+            fillRegionDropDown();
+
+            // a logged-in user also sees his own lists on the map
+            if (isLoggedIn()) {
+                loadListFunc("Visited");
+            }
+            else {
+                drawMarkers();
+            }
+        }
+
+        function loadListFunc(listType) {
+            ajaxCall("GET",
+                listsApi + "/" + listType + "?userId=" + user.userId,
+                null,
+                function (list) {
+                    for (let i = 0; i < list.length; i++) {
+                        listOfCountry[list[i].countryId] = listType;
+                    }
+
+                    if (listType == "Visited") {
+                        // now load the second list
+                        loadListFunc("WantToVisit");
+                    }
+                    else {
+                        drawMarkers();
+                    }
+                },
+                function (err) {
+                    console.log(err);
+                    drawMarkers();
+                });
+        }
+
+
         </script>
 </head>
 <body>
