@@ -34,6 +34,28 @@
             loadFilterOptionsFunc();
             loadCountriesFunc();
         });
+
+
+        // Filter options for the dropdowns
+        function loadFilterOptionsFunc() {
+            ajaxCall("GET", countriesApi + "/FilterOptions", null,
+                loadFilterOptionsSuccess, filterOptionsError);
+        }
+
+        function loadFilterOptionsSuccess(options) {
+            let str = "<option value=''>All regions</option>";
+
+            for (let i = 0; i < options.regions.length; i++) {
+                str += `<option value="${options.regions[i]}">${options.regions[i]}</option>`;
+            }
+
+            $("#regionDD").html(str);
+        }
+
+        function filterOptionsError(err) {
+            // the page still works without the dropdown values
+            console.log(err);
+        }
         </script>
 </head >
             <body>
