@@ -41,10 +41,10 @@ namespace CountriesServers.Controllers
         // Search, filter and sort countries.
         [HttpGet]
         public IActionResult GetCountries(
-            string search = "",
-            string region = "",
-            string language = "",
-            string currency = "",
+            string? search = null,
+            string? region = null,
+            string? language = null,
+            string? currency = null,
             long? minPopulation = null,
             long? maxPopulation = null,
             decimal? minArea = null,
@@ -52,6 +52,37 @@ namespace CountriesServers.Controllers
             string sortBy = "name",
             string dir = "asc")
         {
+            if (search == null)
+            {
+                search = string.Empty;
+            }
+
+            if (region == null)
+            {
+                region = string.Empty;
+            }
+
+            if (language == null)
+            {
+                language = string.Empty;
+            }
+
+            if (currency == null)
+            {
+                currency = string.Empty;
+            }
+
+            if (string.IsNullOrWhiteSpace(sortBy))
+            {
+                sortBy = "name";
+            }
+
+            if (string.IsNullOrWhiteSpace(dir))
+            {
+                dir = "asc";
+            }
+
+
             Country country = new Country();
 
             List<Country> countries = country.Search(
