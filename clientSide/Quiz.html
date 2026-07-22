@@ -50,7 +50,7 @@
             loadScoresFunc("capital");
         });
 
-       
+
         function startQuizFunc(quizType) {
             ajaxCall("GET", quizApi + "/Start/" + quizType, null,
                 startQuizSuccess, error);
@@ -74,7 +74,7 @@
             startTimer(seconds);
             showQuestion();
         }
-       
+
         function startTimer(seconds) {
             secondsLeft = seconds;
             $("#timerPH").html(secondsLeft);
@@ -120,11 +120,11 @@
 
             for (let i = 0; i < question.options.length; i++) {
                 str += `
-                    <button class="quiz-option" id="option_${i}"
-                            onclick="chooseAnswerFunc(${i})">
-                        ${safeText(question.options[i])}
-                    </button>
-                `;
+                        <button class="quiz-option" id="option_${i}"
+                                onclick="chooseAnswerFunc(${i})">
+                            ${safeText(question.options[i])}
+                        </button>
+                    `;
             }
 
             $("#optionsPH").html(str);
@@ -156,7 +156,7 @@
             else {
                 showQuestion();
             }
-        } 
+        }
         function finishQuizFunc(timeIsOver) {
             clearInterval(timerId);
 
@@ -209,24 +209,24 @@
             }
 
             let str = `
-                <table class="scores-table">
-                    <tr>
-                        <th>#</th>
-                        <th>Name</th>
-                        <th>Score</th>
-                        <th>Time</th>
-                    </tr>
-            `;
+                    <table class="scores-table">
+                        <tr>
+                            <th>#</th>
+                            <th>Name</th>
+                            <th>Score</th>
+                            <th>Time</th>
+                        </tr>
+                `;
 
             for (let i = 0; i < scores.length; i++) {
                 str += `
-                    <tr>
-                        <td>${i + 1}</td>
-                        <td>${safeText(scores[i].fullName)}</td>
-                        <td>${scores[i].score}</td>
-                        <td>${scores[i].durationSeconds} sec</td>
-                    </tr>
-                `;
+                        <tr>
+                            <td>${i + 1}</td>
+                            <td>${safeText(scores[i].fullName)}</td>
+                            <td>${scores[i].score}</td>
+                            <td>${scores[i].durationSeconds} sec</td>
+                        </tr>
+                    `;
             }
 
             str += "</table>";
@@ -238,10 +238,85 @@
             console.log(err);
             $("#scoresPH").html("<p>Could not load the high scores</p>");
         }
-        
-        </script>
+
+    </script>
+    <style>
+        .quiz-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .scores-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+
+            .scores-table th {
+                background: #1f4e79;
+                color: white;
+                padding: 9px;
+                text-align: right;
+            }
+
+            .scores-table td {
+                padding: 8px 9px;
+                border-bottom: 1px solid #eee;
+            }
+
+        .quiz-box {
+            text-align: center;
+            padding: 30px;
+        }
+    </style>
 </head>
 <body>
+    <div class="page">
+        <div id="menuPH"></div>
 
+        <h1>Quiz</h1>
+
+        <!-- ---------- choose a quiz ---------- -->
+        <div id="chooserDiv" class="countries-grid">
+            <div class="card-box quiz-box">
+                <h2>Guess the Capital</h2>
+                <p>5 questions, 60 seconds, 10 points per question</p>
+                <input type="button" id="capitalQuizBTN" value="Start" />
+            </div>
+
+            <div class="card-box quiz-box">
+                <h2>Guess the Flag</h2>
+                <p>5 questions, 60 seconds, 10 points per question</p>
+                <input type="button" id="flagQuizBTN" value="Start" />
+            </div>
+        </div>
+
+        <!-- ---------- the quiz ---------- -->
+        <div id="gameDiv" class="card-box">
+            <div class="quiz-head">
+                <span id="progressPH"></span>
+                <span id="timerPH" class="timer"></span>
+            </div>
+
+            <h2 id="questionPH"></h2>
+            <div id="imagePH"></div>
+            <div id="optionsPH"></div>
+
+            <input type="button" id="nextBTN" value="Next question" />
+        </div>
+
+        <!-- ---------- result ---------- -->
+        <div id="resultDiv" class="card-box quiz-box">
+            <h2 id="resultTitlePH"></h2>
+            <h1 id="scorePH"></h1>
+            <p id="detailPH"></p>
+            <input type="button" id="playAgainBTN" value="Play again" />
+        </div>
+
+        <h2>High Scores</h2>
+        <div id="scoresPH"></div>
+    </div>
 </body>
 </html>
