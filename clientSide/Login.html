@@ -24,6 +24,45 @@
                 window.location.href = "Register.html";
             });
         });
+
+        function loginFunc() {
+            let user = {
+                userId: 0,
+                fullName: "",
+                email: $("#emailTB").val().trim().toLowerCase(),
+                password: $("#passTB").val(),
+                passwordHash: "",
+                role: "User",
+                isLocked: false,
+                canShare: true
+            };
+
+            $("#msgPH").html("");
+
+            ajaxCall("POST", usersApi + "/Login", user, loginSuccess, loginError);
+
+            // stops the form from reloading the page
+            return false;
+        }
+        function loginSuccess(user) {
+            saveLoggedUser(user);
+
+            swal("Welcome", "Hello " + user.fullName, "success");
+
+            window.location.href = "index.html";
+        }
+
+        function loginError(err) {
+            console.log(err);
+
+            // 401 = wrong details, 403 = the account was locked by an admin
+            if (err.status == 403) {
+                $("#msgPH").html("Your account is locked. Please contact the administrator.");
+            }
+            else {
+                $("#msgPH").html("Wrong email or password");
+            }
+        }
     </script>
 </head >
             <body>
