@@ -95,6 +95,68 @@
             }, 1000);
         }
 
+
+        // Questions
+
+        function showQuestion() {
+            let question = quiz.questions[currentQuestion];
+
+            $("#progressPH").html(
+                "Question " + (currentQuestion + 1) + " of " + quiz.questions.length
+            );
+
+            $("#questionPH").html(safeText(question.questionText));
+
+            if (question.imageUrl != null && question.imageUrl != "") {
+                $("#imagePH").html(
+                    `<img src="${safeText(question.imageUrl)}" height="130" />`
+                );
+            }
+            else {
+                $("#imagePH").html("");
+            }
+
+            let str = "";
+
+            for (let i = 0; i < question.options.length; i++) {
+                str += `
+                    <button class="quiz-option" id="option_${i}"
+                            onclick="chooseAnswerFunc(${i})">
+                        ${safeText(question.options[i])}
+                    </button>
+                `;
+            }
+
+            $("#optionsPH").html(str);
+            $("#nextBTN").hide();
+        }
+
+        function chooseAnswerFunc(index) {
+            let question = quiz.questions[currentQuestion];
+
+            // stop the player from answering twice
+            $(".quiz-option").attr("onclick", "");
+
+            answers.push({
+                questionId: question.questionId,
+                selected: question.options[index]
+            });
+
+            $("#option_" + index).addClass("correct");
+
+            $("#nextBTN").show();
+        }
+
+        function nextQuestionFunc() {
+            currentQuestion = currentQuestion + 1;
+
+            if (currentQuestion >= quiz.questions.length) {
+                finishQuizFunc(false);
+            }
+            else {
+                showQuestion();
+            }
+        } 
         </script>
 </head>
 <body>
