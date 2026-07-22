@@ -34,6 +34,41 @@
             // RealTime with polling: the feed refreshes by itself
             startPolling();
         });
+
+
+        // Polling
+
+        function startPolling() {
+            if (pollingId != null) {
+                return;
+            }
+
+            pollingId = setInterval(loadSharesFunc, POLLING_SECONDS * 1000);
+            $("#pollingStatusPH").html("Live updates are on (every " + POLLING_SECONDS + " seconds)");
+        }
+
+        function stopPolling() {
+            if (pollingId != null) {
+                clearInterval(pollingId);
+                pollingId = null;
+            }
+
+            $("#pollingStatusPH").html("Live updates are off");
+        }
+
+        function togglePollingFunc() {
+            if ($("#pollingCB").is(":checked")) {
+                startPolling();
+            }
+            else {
+                stopPolling();
+            }
+        }
+
+        // stop the timer when the page is closed
+        $(window).on("beforeunload", function () {
+            stopPolling();
+        });
 </script>
 </head >
             <body>
