@@ -58,38 +58,38 @@
 
             if (isLoggedIn()) {
                 buttons = `
-                    <button class="green-btn" onclick="addToListFunc('Visited')">
-                        I visited
-                    </button>
-                    <button onclick="addToListFunc('WantToVisit')">
-                        Want to visit
-                    </button>
-                `;
+                        <button class="green-btn" onclick="addToListFunc('Visited')">
+                            I visited
+                        </button>
+                        <button onclick="addToListFunc('WantToVisit')">
+                            Want to visit
+                        </button>
+                    `;
             }
 
             let str = `
-                <div class="card-box">
-                    <div class="country-details">
-                        <img src="${safeText(country.flagUrl)}" width="260"
-                             alt="Flag of ${safeText(country.name)}" />
+                    <div class="card-box">
+                        <div class="country-details">
+                            <img src="${safeText(country.flagUrl)}" width="260"
+                                 alt="Flag of ${safeText(country.name)}" />
 
-                        <div>
-                            <h1>${safeText(country.name)}</h1>
+                            <div>
+                                <h1>${safeText(country.name)}</h1>
 
-                            <table class="details-table">
-                                <tr><td>Capital</td><td>${safeText(country.capital)}</td></tr>
-                                <tr><td>Region</td><td>${safeText(country.region)}</td></tr>
-                                <tr><td>Languages</td><td>${safeText(country.languages)}</td></tr>
-                                <tr><td>Currencies</td><td>${safeText(country.currencies)}</td></tr>
-                                <tr><td>Population</td><td>${formatNumber(country.population)}</td></tr>
-                                <tr><td>Area</td><td>${formatNumber(country.area)} km²</td></tr>
-                            </table>
+                                <table class="details-table">
+                                    <tr><td>Capital</td><td>${safeText(country.capital)}</td></tr>
+                                    <tr><td>Region</td><td>${safeText(country.region)}</td></tr>
+                                    <tr><td>Languages</td><td>${safeText(country.languages)}</td></tr>
+                                    <tr><td>Currencies</td><td>${safeText(country.currencies)}</td></tr>
+                                    <tr><td>Population</td><td>${formatNumber(country.population)}</td></tr>
+                                    <tr><td>Area</td><td>${formatNumber(country.area)} km²</td></tr>
+                                </table>
 
-                            ${buttons}
+                                ${buttons}
+                            </div>
                         </div>
                     </div>
-                </div>
-            `;
+                `;
 
             $("#detailsPH").html(str);
         }
@@ -144,23 +144,23 @@
 
                 if (isLoggedIn() && share.userId == user.userId) {
                     myButtons = `
-                        <button onclick="editShareFunc(${share.shareId})">Edit</button>
-                        <button class="delete-btn" onclick="deleteShareFunc(${share.shareId})">Delete</button>
-                    `;
+                            <button onclick="editShareFunc(${share.shareId})">Edit</button>
+                            <button class="delete-btn" onclick="deleteShareFunc(${share.shareId})">Delete</button>
+                        `;
                 }
 
                 str += `
-                    <div class="share-card">
-                        <div class="share-head">
-                            <strong>${safeText(share.userName)}</strong>
-                            <span>${safeText(share.createdAt)}</span>
+                        <div class="share-card">
+                            <div class="share-head">
+                                <strong>${safeText(share.userName)}</strong>
+                                <span>${safeText(share.createdAt)}</span>
+                            </div>
+
+                            <p id="shareText_${share.shareId}">${safeText(share.content)}</p>
+
+                            ${myButtons}
                         </div>
-
-                        <p id="shareText_${share.shareId}">${safeText(share.content)}</p>
-
-                        ${myButtons}
-                    </div>
-                `;
+                    `;
             }
 
             $("#sharesPH").html(str);
@@ -232,9 +232,55 @@
                 });
         }
 
-</script>
-</head >
-            <body>
+    </script>
 
+    <style>
+        .country-details {
+            display: flex;
+            gap: 25px;
+            flex-wrap: wrap;
+            align-items: flex-start;
+        }
+
+        .details-table {
+            border-collapse: collapse;
+            margin-bottom: 15px;
+        }
+
+            .details-table td {
+                padding: 6px 14px 6px 0;
+                border-bottom: 1px solid #eee;
+            }
+
+                .details-table td:first-child {
+                    font-weight: bold;
+                    color: #1f4e79;
+                }
+    </style>
+</head>
+            <body>
+                <div class="page">
+                    <div id="menuPH"></div>
+
+                    <input type="button" id="backBTN" value="Back to countries" />
+
+                    <div id="detailsPH"></div>
+
+                    <h2>Shares about this country</h2>
+
+                    <div id="shareFormDiv" class="card-box">
+                        <textarea id="shareTB" rows="3" maxlength="1000"
+                                  placeholder="Share an experience, a recommendation or a short review..."
+                                  style="width:100%; padding:9px; border:1px solid #cfd8e3; border-radius:6px;"></textarea>
+
+                        <input type="button" id="addShareBTN" value="Publish" />
+                    </div>
+
+                    <p id="loginHintPH">
+                        <a href="Login.html">Log in</a> to share your experience about this country.
+                    </p>
+
+                    <div id="sharesPH"></div>
+                </div>
             </body>
 </html >
