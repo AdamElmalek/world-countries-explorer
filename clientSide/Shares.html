@@ -1,0 +1,42 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Shares - World Countries</title>
+
+    <link rel="stylesheet" href="style.css" />
+
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+    <script src="ajaxCalls.js"></script>
+    <script src="common.js"></script>
+    <script>
+        let user = null;
+        let allShares = [];
+        let pollingId = null;
+        let lastCount = 0;
+
+        // how often the page asks the server for new shares
+        const POLLING_SECONDS = 10;
+
+        $(document).ready(function () {
+            buildMenu("shares");
+
+            user = getLoggedUser();
+
+            $("#countryDD").change(renderShares);
+            $("#textTB").on("input", renderShares);
+
+            $("#pollingCB").change(togglePollingFunc);
+
+            loadSharesFunc();
+
+            // RealTime with polling: the feed refreshes by itself
+            startPolling();
+        });
+</script>
+</head >
+            <body>
+
+            </body>
+</html >
