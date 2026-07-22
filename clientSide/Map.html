@@ -112,6 +112,59 @@
 
             $("#regionDD").html(str);
         }
+
+        // Draw
+
+        function drawMarkers() {
+            let region = $("#regionDD").val();
+
+            markersLayer.clearLayers();
+
+            let shown = 0;
+
+            for (let i = 0; i < countries.length; i++) {
+                let country = countries[i];
+
+                if (region != "" && country.region != region) {
+                    continue;
+                }
+
+                // a country without coordinates cannot be drawn
+                if (country.lat == null || country.lng == null) {
+                    continue;
+                }
+
+                let listType = listOfCountry[country.countryId];
+
+                if (listType == null) {
+                    listType = "none";
+                }
+
+                let marker = L.circleMarker([country.lat, country.lng], {
+                    radius: (listType == "none") ? 6 : 9,
+                    color: "#ffffff",
+                    weight: 2,
+                    fillColor: COLORS[listType],
+                    fillOpacity: 0.95
+                });
+
+                marker.bindPopup(`
+                    <div style="min-width:150px">
+                        <img src="${country.flagUrl}" width="60" /><br />
+                        <strong>${country.name}</strong><br />
+                        Capital: ${country.capital}<br />
+                        Population: ${formatNumber(country.population)}<br />
+                        <a href="country.html?id=${country.countryId}">View details</a>
+                    </div>
+                `);
+
+                marker.addTo(markersLayer);
+
+                shown = shown + 1;
+            }
+
+            $("#countPH").html("Showing " + shown + " countries on the map");
+        }
         </script>
 </head>
 <body>
