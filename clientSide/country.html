@@ -1,0 +1,52 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Country Details - World Countries</title>
+
+    <link rel="stylesheet" href="style.css" />
+
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+    <script src="ajaxCalls.js"></script>
+    <script src="common.js"></script>
+
+    <script>
+        let countryId = 0;
+        let user = null;
+
+        $(document).ready(function () {
+            buildMenu("countries");
+
+            user = getLoggedUser();
+            countryId = getQueryParam("id");
+
+            if (countryId == null) {
+                $("#detailsPH").html("<h3>No country was chosen</h3>");
+                return;
+            }
+
+            $("#addShareBTN").click(addShareFunc);
+            $("#backBTN").click(function () {
+                window.location.href = "index.html";
+            });
+
+            // the share form is only shown to a logged-in user
+            if (isLoggedIn()) {
+                $("#shareFormDiv").show();
+                $("#loginHintPH").hide();
+            }
+            else {
+                $("#shareFormDiv").hide();
+                $("#loginHintPH").show();
+            }
+
+            loadCountryFunc();
+            loadSharesFunc();
+        });
+</script>
+</head >
+            <body>
+
+            </body>
+</html >
