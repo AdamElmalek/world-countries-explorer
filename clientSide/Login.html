@@ -65,7 +65,36 @@
         }
     </script>
 </head >
-            <body>
+<body>
+    <div class="page">
+        <div id="menuPH"></div>
 
-            </body>
+        <div class="form-box">
+            <h1>Login</h1>
+
+            <form id="loginForm">
+                <input id="emailTB"
+                       type="email"
+                       placeholder="Email"
+                       required />
+
+                <input id="passTB"
+                       type="password"
+                       placeholder="Password"
+                       required
+                       minlength="6" />
+
+                <input type="submit" value="Login" />
+            </form>
+
+            <p id="msgPH" class="error"></p>
+
+            <p>
+                New user?
+                <a href="#" id="registerLink">Register here</a>
+            </p>
+        </div>
+    </div>
+
+</body>
 </html >
