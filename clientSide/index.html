@@ -171,6 +171,15 @@
                 $("#toggleViewBTN").val("Table View");
             }
         }
+
+        function clearFiltersFunc() {
+            $("#searchTB").val("");
+            $("#regionDD").val("");
+            $("#sortByDD").val("name");
+            $("#dirDD").val("asc");
+
+            loadCountriesFunc();
+        }
         </script>
 </head >
             <body>
