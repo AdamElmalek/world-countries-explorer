@@ -346,9 +346,35 @@
             </div>
         </div>
 
+        <!-- ---------- languages ---------- -->
+        <div class="card-box">
+            <h2>Languages I speak</h2>
 
+            <div id="languagesPH"></div>
 
+            <form id="languageForm" class="controls">
+                <input id="langCodeTB"
+                       type="text"
+                       placeholder="Code (en)"
+                       required
+                       maxlength="10" />
 
+                <input id="langNameTB"
+                       type="text"
+                       placeholder="Language name"
+                       required
+                       maxlength="100" />
+
+                <select id="langLevelDD">
+                    <option>Beginner</option>
+                    <option>Intermediate</option>
+                    <option>Advanced</option>
+                    <option>Native</option>
+                </select>
+
+                <input type="submit" value="Add language" />
+            </form>
+        </div>
 
     </div>
 
