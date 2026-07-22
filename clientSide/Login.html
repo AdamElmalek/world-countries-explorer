@@ -2,9 +2,31 @@
 <html>
 <head>
     <meta charset="utf-8" />
-    <title></title>
-</head>
-<body>
+    <title>Login - World Countries</title>
 
-</body>
-</html>
+    <link rel="stylesheet" href="style.css" />
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+    <script src="ajaxCalls.js"></script>
+    <script src="common.js"></script>
+
+    <script>
+        $(document).ready(function () {
+            // A user who is already logged in has nothing to do here
+            if (isLoggedIn()) {
+                window.location.href = "index.html";
+                return;
+            }
+
+            $("#loginForm").submit(loginFunc);
+
+            $("#registerLink").click(function () {
+                window.location.href = "Register.html";
+            });
+        });
+    </script>
+</head >
+            <body>
+
+            </body>
+</html >
