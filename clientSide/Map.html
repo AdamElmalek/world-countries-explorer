@@ -168,6 +168,29 @@
         </script>
 </head>
 <body>
+    <div class="page">
+        <div id="menuPH"></div>
 
+        <h1>Interactive Map</h1>
+
+        <div class="controls">
+            <span><span class="legend-dot" style="background:#2e7d32"></span> Visited</span>
+            <span><span class="legend-dot" style="background:#1565c0"></span> Want to visit</span>
+            <span><span class="legend-dot" style="background:#8a97a8"></span> Other countries</span>
+
+            <select id="regionDD">
+                <option value="">All regions</option>
+            </select>
+        </div>
+
+        <p id="countPH"></p>
+
+        <div id="mapDiv"></div>
+
+        <p class="share-head">
+            The coordinates come from the database and are saved when the
+            countries are imported on the server side.
+        </p>
+    </div>
 </body>
 </html>
