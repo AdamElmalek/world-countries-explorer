@@ -48,6 +48,68 @@
             }
         }
 
+        // Load a list
+
+        function loadListFunc(listType) {
+            ajaxCall("GET",
+                listsApi + "/" + listType + "?userId=" + user.userId,
+                null,
+                function (countries) {
+                    renderList(countries, listType);
+                },
+                error);
+        }
+
+        function renderList(countries, listType) {
+            let placeHolder = (listType == "Visited") ? "#visitedPH" : "#wantPH";
+            let countPH = (listType == "Visited") ? "#visitedCountPH" : "#wantCountPH";
+
+            $(countPH).html("(" + countries.length + ")");
+
+            if (countries.length == 0) {
+                $(placeHolder).html("<p>This list is empty. Add countries from the country page.</p>");
+                return;
+            }
+
+            // the other list, used by the move button
+            let otherType = (listType == "Visited") ? "WantToVisit" : "Visited";
+            let otherLabel = (listType == "Visited") ? "Move to Want to visit" : "Move to Visited";
+
+            let str = "";
+
+            for (let i = 0; i < countries.length; i++) {
+                let country = countries[i];
+
+                str += `
+                    <div class="share-card">
+                        <div class="list-row">
+                            <img src="${safeText(country.flagUrl)}" width="60" />
+
+                            <div class="list-info">
+                                <a href="country.html?id=${country.countryId}">
+                                    <strong>${safeText(country.name)}</strong>
+                                </a>
+                                <div class="share-head">
+                                    ${safeText(country.capital)} - ${safeText(country.region)}
+                                </div>
+                            </div>
+
+                            <button onclick="moveCountryFunc(${country.countryId}, '${listType}', '${otherType}')">
+                                ${otherLabel}
+                            </button>
+
+                            <button class="delete-btn"
+                                    onclick="removeCountryFunc(${country.countryId}, '${listType}')">
+                                Remove
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }
+
+            $(placeHolder).html(str);
+        }
+
 </script>
 </head>
 <body>
