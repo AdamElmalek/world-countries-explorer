@@ -115,6 +115,65 @@
         }
 
 
+        // Continent preferences
+
+        function loadContinentsFunc() {
+            ajaxCall("GET", usersApi + "/" + user.userId + "/Continents", null,
+                loadContinentsSuccess, error);
+        }
+
+        function loadContinentsSuccess(continents) {
+            if (continents.length == 0) {
+                $("#continentsPH").html("<p>No continents were chosen yet</p>");
+                return;
+            }
+
+            let str = "";
+
+            for (let i = 0; i < continents.length; i++) {
+                str += `
+                    <span class="chip">
+                        ${safeText(continents[i])}
+                        <button onclick="removeContinentFunc('${safeText(continents[i])}')">x</button>
+                    </span>
+                `;
+            }
+
+            $("#continentsPH").html(str);
+        }
+
+        function addContinentFunc() {
+            let request = {
+                continentName: $("#continentDD").val()
+            };
+
+            ajaxCall("POST", usersApi + "/" + user.userId + "/Continents", request,
+                addContinentSuccess, addContinentError);
+        }
+
+        function addContinentSuccess(result) {
+            loadContinentsFunc();
+        }
+
+        function addContinentError(err) {
+            console.log(err);
+
+            if (err.status == 409) {
+                swal("Already added", "This continent is already in your list", "warning");
+            }
+            else {
+                swal("Error", "Could not add the continent", "error");
+            }
+        }
+
+        function removeContinentFunc(continentName) {
+            ajaxCall("DELETE",
+                usersApi + "/" + user.userId + "/Continents/" + encodeURIComponent(continentName),
+                null, loadContinentsFunc, error);
+        }
+
+
+
         </script>
 </head>
 <body>
