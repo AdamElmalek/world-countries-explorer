@@ -157,7 +157,17 @@
 
         function setLockedFunc(userId, isLocked) {
             let request = { isLocked: isLocked };
+            ajaxCall("PUT", adminApi + "/Lock/" + userId, request,
+                loadUsersFunc, error);
+        }
+        function setCanShareFunc(userId, canShare) {
+            let request = { canShare: canShare };
 
+            ajaxCall("PUT", adminApi + "/CanShare/" + userId, request,
+                loadUsersFunc, error);
+        }
+
+       
 </script>
 </head>
 <body>
