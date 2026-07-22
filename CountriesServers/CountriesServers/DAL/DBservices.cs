@@ -1891,7 +1891,7 @@ namespace CountriesServers.DAL
 
                 using SqlDataReader dataReader = cmd.ExecuteReader();
 
-                if (dataReader.Read())
+                while (dataReader.Read())
                 {
                     UserCountryList userCountry = new UserCountryList();
 
