@@ -32,6 +32,62 @@
             loadContinentsFunc();
             loadLanguagesFunc();
         });
+
+
+        // Personal details
+
+        function loadProfileFunc() {
+            ajaxCall("GET", usersApi + "/" + user.userId, null, loadProfileSuccess, error);
+        }
+
+        function loadProfileSuccess(profile) {
+            $("#nameTB").val(profile.fullName);
+            $("#emailTB").val(profile.email);
+        }
+
+        function updateProfileFunc() {
+            let updatedUser = {
+                userId: user.userId,
+                fullName: $("#nameTB").val().trim(),
+                email: $("#emailTB").val().trim().toLowerCase(),
+                password: "",
+                passwordHash: "",
+                role: user.role,
+                isLocked: false,
+                canShare: true
+            };
+
+            ajaxCall("PUT", usersApi + "/" + user.userId, updatedUser,
+                updateProfileSuccess, updateProfileError);
+
+            return false;
+        }
+
+        function updateProfileSuccess(result) {
+            // keep the menu and localStorage up to date
+            user.fullName = $("#nameTB").val().trim();
+            user.email = $("#emailTB").val().trim().toLowerCase();
+            saveLoggedUser(user);
+
+            buildMenu("");
+
+            swal("Saved", "Your details were updated", "success");
+        }
+
+        function updateProfileError(err) {
+            console.log(err);
+
+            // 409 = the email belongs to another user
+            if (err.status == 409) {
+                swal("Email in use", "This email belongs to another user", "warning");
+            }
+            else {
+                swal("Error", "Could not update your details", "error");
+            }
+        }
+
+
+
         </script>
 </head>
 <body>
