@@ -10,9 +10,7 @@ namespace CountriesServers.DAL
         {
         }
 
-        // =====================================================
-        // Connect
-        // =====================================================
+
 
         public SqlConnection connect(string conString)
         {
@@ -1304,8 +1302,8 @@ namespace CountriesServers.DAL
                    new Dictionary<string, object>();
 
                 paramDic.Add("@CountryId", countryId);
-                paramDic.Add("@LanguageCode", currency.CurrencyCode);
-                paramDic.Add("@LanguageName", currency.CurrencyName);
+                paramDic.Add("@currencyCode", currency.CurrencyCode);
+                paramDic.Add("@currencyName", currency.CurrencyName);
                 paramDic.Add("@CurrencySymbol", GetDatabaseValue(currency.CurrencySymbol));
 
                 cmd = CreateCommandWithStoredProcedureGeneral(

@@ -1,4 +1,7 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using CountriesServers.Models;
+using CountriesServers.Services;
+using Microsoft.AspNetCore.Mvc;
+using System.Globalization;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -8,36 +11,159 @@ namespace CountriesServers.Controllers
     [ApiController]
     public class CountriesController : ControllerBase
     {
-        // GET: api/<CountriesValuesController>
+        // Import all countries from countries.dev into SQL Server.
+        [HttpPost("Import")]
+        public async Task<IActionResult> Import()
+        {
+            try
+            {
+                CountriesDevService service = new CountriesDevService();
+
+                int importedCountries = await service.ImportCountries();
+
+                if (importedCountries > 0)
+                {
+                    return Ok(importedCountries);
+                }
+
+                return BadRequest("No countries were imported");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(
+                    StatusCodes.Status500InternalServerError,
+                    ex.Message
+                );
+            }
+        }
+
+
+        // Search, filter and sort countries.
         [HttpGet]
-        public IEnumerable<string> Get()
+        public IActionResult GetCountries(
+            string search = "",
+            string region = "",
+            string language = "",
+            string currency = "",
+            long? minPopulation = null,
+            long? maxPopulation = null,
+            decimal? minArea = null,
+            decimal? maxArea = null,
+            string sortBy = "name",
+            string dir = "asc")
         {
-            return new string[] { "value1", "value2" };
+            Country country = new Country();
+
+            List<Country> countries = country.Search(
+                search,
+                region,
+                language,
+                currency,
+                minPopulation,
+                maxPopulation,
+                minArea,
+                maxArea,
+                sortBy,
+                dir
+            );
+
+            return Ok(countries);
         }
 
-        // GET api/<CountriesValuesController>/5
-        [HttpGet("{id}")]
-        public string Get(int id)
+
+        // Get regions, languages, currencies and numeric limits.
+        [HttpGet("FilterOptions")]
+        public IActionResult GetFilterOptions()
         {
-            return "value";
+            Country country = new Country();
+
+            CountryFilterOptions options =
+                country.GetFilterOptions();
+
+            return Ok(options);
         }
 
-        // POST api/<CountriesValuesController>
+
+        // Get one complete country by its ID.
+        [HttpGet("{id:int}")]
+        public IActionResult GetCountry(int id)
+        {
+            Country country = new Country();
+
+            Country? selectedCountry =
+                country.GetById(id);
+
+            if (selectedCountry == null)
+            {
+                return NotFound("Country was not found");
+            }
+
+            return Ok(selectedCountry);
+        }
+
+
+        // Add a country manually.
         [HttpPost]
-        public void Post([FromBody] string value)
+        public IActionResult InsertCountry(
+            [FromBody] Country country)
         {
+            int result = country.Insert();
+
+            if (result > 0)
+            {
+                return Ok(result);
+            }
+
+            if (result == -1)
+            {
+                return Conflict("Country code already exists");
+            }
+
+            return BadRequest("Country information is invalid");
         }
 
-        // PUT api/<CountriesValuesController>/5
-        [HttpPut("{id}")]
-        public void Put(int id, [FromBody] string value)
+
+        // Update an existing country.
+        [HttpPut("{id:int}")]
+        public IActionResult UpdateCountry(
+            int id,
+            [FromBody] Country country)
         {
+            country.CountryId = id;
+
+            int result = country.Update();
+
+            if (result == 1)
+            {
+                return Ok(result);
+            }
+
+            if (result == -1)
+            {
+                return Conflict("Country code already exists");
+            }
+
+            return NotFound(
+                "Country was not found or the information is invalid"
+            );
         }
 
-        // DELETE api/<CountriesValuesController>/5
-        [HttpDelete("{id}")]
-        public void Delete(int id)
+
+        // Delete a country.
+        [HttpDelete("{id:int}")]
+        public IActionResult DeleteCountry(int id)
         {
+            Country country = new Country();
+            country.CountryId = id;
+
+            bool result = country.Delete();
+
+            if (result)
+            {
+                return Ok(true);
+            }
+
+            return NotFound("Country was not found");
         }
     }
 }
