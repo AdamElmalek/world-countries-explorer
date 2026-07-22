@@ -93,7 +93,25 @@
                 });
         }
 
+        function fillRegionDropDown() {
+            let regions = [];
 
+            for (let i = 0; i < countries.length; i++) {
+                if (!regions.includes(countries[i].region)) {
+                    regions.push(countries[i].region);
+                }
+            }
+
+            regions.sort();
+
+            let str = "<option value=''>All regions</option>";
+
+            for (let i = 0; i < regions.length; i++) {
+                str += `<option value="${regions[i]}">${regions[i]}</option>`;
+            }
+
+            $("#regionDD").html(str);
+        }
         </script>
 </head>
 <body>
