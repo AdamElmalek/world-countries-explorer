@@ -85,7 +85,34 @@
                 swal("Error", "Could not update your details", "error");
             }
         }
+        // =====================================================
+        // Change password
+        // =====================================================
 
+        function changePasswordFunc() {
+            let request = {
+                email: user.email,
+                currentPassword: $("#currentPassTB").val(),
+                newPassword: $("#newPassTB").val()
+            };
+
+            ajaxCall("PUT", usersApi + "/" + user.userId + "/Password", request,
+                changePasswordSuccess, changePasswordError);
+
+            return false;
+        }
+
+        function changePasswordSuccess(result) {
+            $("#currentPassTB").val("");
+            $("#newPassTB").val("");
+
+            swal("Saved", "Your password was updated", "success");
+        }
+
+        function changePasswordError(err) {
+            console.log(err);
+            swal("Failed", "The current password is not correct", "error");
+        }
 
 
         </script>
