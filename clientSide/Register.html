@@ -54,6 +54,23 @@
 
             return false;
         }
+        function registerSuccess(newUserId) {
+            swal("Registered", "Your account was created. Please log in.", "success");
+
+            window.location.href = "Login.html";
+        }
+
+        function registerError(err) {
+            console.log(err);
+
+            // 409 = the email is already registered
+            if (err.status == 409) {
+                $("#msgPH").html("This email is already registered");
+            }
+            else {
+                $("#msgPH").html("Registration failed. Please check your details.");
+            }
+        }
     </script>
 
 </head >
