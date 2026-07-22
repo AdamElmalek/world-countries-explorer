@@ -21,6 +21,39 @@
             // checks that the two passwords are the same
             $("#passTB, #confirmTB").on("input", checkPasswordsMatch);
         });
+
+        function checkPasswordsMatch() {
+            let pass = $("#passTB").val();
+            let confirm = $("#confirmTB").val();
+
+            if (pass != confirm) {
+                document.getElementById("confirmTB")
+                    .setCustomValidity("Passwords do not match");
+            }
+            else {
+                document.getElementById("confirmTB")
+                    .setCustomValidity("");
+            }
+        }
+
+        function registerFunc() {
+            let user = {
+                userId: 0,
+                fullName: $("#nameTB").val().trim(),
+                email: $("#emailTB").val().trim().toLowerCase(),
+                password: $("#passTB").val(),
+                passwordHash: "",
+                role: "User",
+                isLocked: false,
+                canShare: true
+            };
+
+            $("#msgPH").html("");
+
+            ajaxCall("POST", usersApi + "/Register", user, registerSuccess, registerError);
+
+            return false;
+        }
     </script>
 
 </head >
