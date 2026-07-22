@@ -196,6 +196,45 @@
 </script>
 </head>
 <body>
+    <div class="page">
+        <div id="menuPH"></div>
 
+        <h1>Administration</h1>
+
+        <!-- ---------- statistics ---------- -->
+        <div class="stats-row" id="statsPH"></div>
+        <p id="updatedPH" class="share-head"></p>
+
+        <!-- ---------- import ---------- -->
+        <div class="card-box">
+            <h2>Import countries</h2>
+            <p>
+                Pulls the country data on the server side and saves it
+                into the database.
+            </p>
+            <input type="button" id="importBTN" value="Import countries" />
+        </div>
+
+        <!-- ---------- users ---------- -->
+        <div class="card-box">
+            <h2>Users</h2>
+
+            <input type="button" id="refreshBTN" value="Refresh" />
+
+            <table id="usersTable" class="display" style="width:100%">
+                <thead>
+                    <tr>
+                        <th>Id</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                        <th>Status</th>
+                        <th>Sharing</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+            </table>
+        </div>
+    </div>
 </body>
 </html>
