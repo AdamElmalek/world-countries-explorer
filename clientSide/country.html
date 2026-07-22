@@ -94,6 +94,32 @@
             $("#detailsPH").html(str);
         }
 
+
+        // Personal lists
+        function addToListFunc(listType) {
+            let request = {
+                userId: user.userId,
+                countryId: Number(countryId),
+                listType: listType
+            };
+
+            ajaxCall("POST", listsApi, request, addToListSuccess, addToListError);
+        }
+
+        function addToListSuccess(result) {
+            swal("Added", "The country was added to your list", "success");
+        }
+
+        function addToListError(err) {
+            console.log(err);
+
+            if (err.status == 409) {
+                swal("Already there", "This country is already in that list", "warning");
+            }
+            else {
+                swal("Error", "Could not add the country", "error");
+            }
+        }
 </script>
 </head >
             <body>
