@@ -173,6 +173,103 @@
         }
 
 
+        // Language preferences
+
+        function loadLanguagesFunc() {
+            ajaxCall("GET", usersApi + "/" + user.userId + "/Languages", null,
+                loadLanguagesSuccess, error);
+        }
+
+        function loadLanguagesSuccess(languages) {
+            if (languages.length == 0) {
+                $("#languagesPH").html("<p>No languages were added yet</p>");
+                return;
+            }
+
+            let levels = ["Beginner", "Intermediate", "Advanced", "Native"];
+            let str = "";
+
+            for (let i = 0; i < languages.length; i++) {
+                let lang = languages[i];
+
+                let options = "";
+
+                for (let j = 0; j < levels.length; j++) {
+                    let selected = (levels[j] == lang.proficiencyLevel) ? "selected" : "";
+                    options += `<option ${selected}>${levels[j]}</option>`;
+                }
+
+                str += `
+                    <div class="lang-row">
+                        <strong>${safeText(lang.languageName)}</strong>
+                        (${safeText(lang.languageCode)})
+
+                        <select onchange="updateLanguageFunc('${safeText(lang.languageCode)}', this.value)">
+                            ${options}
+                        </select>
+
+                        <button class="delete-btn"
+                                onclick="removeLanguageFunc('${safeText(lang.languageCode)}')">
+                            Remove
+                        </button>
+                    </div>
+                `;
+            }
+
+            $("#languagesPH").html(str);
+        }
+
+        function addLanguageFunc() {
+            let language = {
+                languageCode: $("#langCodeTB").val().trim().toLowerCase(),
+                languageName: $("#langNameTB").val().trim(),
+                proficiencyLevel: $("#langLevelDD").val()
+            };
+
+            ajaxCall("POST", usersApi + "/" + user.userId + "/Languages", language,
+                addLanguageSuccess, addLanguageError);
+
+            return false;
+        }
+
+        function addLanguageSuccess(result) {
+            $("#langCodeTB").val("");
+            $("#langNameTB").val("");
+
+            loadLanguagesFunc();
+        }
+
+        function addLanguageError(err) {
+            console.log(err);
+
+            if (err.status == 409) {
+                swal("Already added", "This language is already in your list", "warning");
+            }
+            else {
+                swal("Error", "Could not add the language", "error");
+            }
+        }
+
+        function updateLanguageFunc(languageCode, proficiencyLevel) {
+            let request = {
+                proficiencyLevel: proficiencyLevel
+            };
+
+            ajaxCall("PUT",
+                usersApi + "/" + user.userId + "/Languages/" + languageCode,
+                request, updateLanguageSuccess, error);
+        }
+
+        function updateLanguageSuccess(result) {
+            swal("Saved", "The level was updated", "success");
+        }
+
+        function removeLanguageFunc(languageCode) {
+            ajaxCall("DELETE",
+                usersApi + "/" + user.userId + "/Languages/" + languageCode,
+                null, loadLanguagesFunc, error);
+        }
+
 
         </script>
 </head>
