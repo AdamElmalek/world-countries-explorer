@@ -199,6 +199,39 @@
             }
         }
 
+        function editShareFunc(shareId) {
+            let currentText = $("#shareText_" + shareId).text();
+
+            let newText = prompt("Edit your share:", currentText);
+
+            if (newText == null || newText.trim() == "") {
+                return;
+            }
+
+            let request = {
+                userId: user.userId,
+                content: newText.trim()
+            };
+
+            ajaxCall("PUT", sharesApi + "/" + shareId, request, loadSharesFunc, error);
+        }
+
+        function deleteShareFunc(shareId) {
+            swal({
+                title: "Delete this share?",
+                icon: "warning",
+                buttons: true,
+                dangerMode: true
+            })
+                .then(function (willDelete) {
+                    if (willDelete) {
+                        ajaxCall("DELETE",
+                            sharesApi + "/" + shareId + "?userId=" + user.userId,
+                            null, loadSharesFunc, error);
+                    }
+                });
+        }
+
 </script>
 </head >
             <body>
