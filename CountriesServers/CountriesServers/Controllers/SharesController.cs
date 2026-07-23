@@ -38,11 +38,10 @@ namespace CountriesServers.Controllers
 
             if (result == -1)
             {
-                return StatusCode(
-                    StatusCodes.Status403Forbidden,
-                    "The user is blocked from sharing content");
+                return StatusCode(StatusCodes.Status403Forbidden, "The user is blocked from sharing content");
 
             }
+
 
             return BadRequest("Share information is invalid");
 
@@ -62,9 +61,7 @@ namespace CountriesServers.Controllers
 
             if (result == -1)
             {
-                return StatusCode(
-                    StatusCodes.Status403Forbidden,
-                    "The user is blocked from sharing content");
+                return StatusCode(StatusCodes.Status403Forbidden,"The user is blocked from sharing content");                    
             }
 
             return NotFound("Share was not found or does not belong to this user");
