@@ -8,143 +8,319 @@
 
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+
     <script src="ajaxCalls.js"></script>
     <script src="common.js"></script>
 
     <script>
         $(document).ready(function () {
             buildMenu("advanced");
+
+            $("#mapBTN").click(function () {
+                window.location.href = "Map.html";
+            });
+
+            $("#quizBTN").click(function () {
+                window.location.href = "Quiz.html";
+            });
+
+            $("#sharesBTN").click(function () {
+                window.location.href = "Shares.html";
+            });
+
+            $("#listsBTN").click(function () {
+                if (isLoggedIn()) {
+                    window.location.href = "MyLists.html";
+                }
+                else {
+                    window.location.href = "Login.html";
+                }
+            });
         });
     </script>
+
+    <style>
+        .advanced-intro {
+            margin-bottom: 18px;
+            font-size: 17px;
+        }
+
+        .advanced-card {
+            margin-bottom: 18px;
+        }
+
+            .advanced-card h2 {
+                margin-top: 0;
+                color: #1f4e79;
+            }
+
+            .advanced-card p {
+                line-height: 1.5;
+            }
+
+            .advanced-card ul {
+                line-height: 1.5;
+            }
+
+            .advanced-card input[type="button"] {
+                margin-top: 8px;
+            }
+
+        .technical-list li {
+            margin-bottom: 7px;
+        }
+
+        .feature-label {
+            font-weight: bold;
+        }
+    </style>
 </head>
+
 <body>
     <div class="page">
         <div id="menuPH"></div>
 
         <h1>Advanced Features</h1>
-
-        <p>
+        <p class="advanced-intro">
             In addition to the required basic functionality, the following
-            features were added to the system.
+            advanced features were added to the World Countries system.
         </p>
 
-        <!-- ---------- 1. map ---------- -->
-        <div class="card-box">
-            <h2>1. Interactive Map</h2>
+        <!-- Interactive map -->
+        <div class="card-box advanced-card">
+            <h2>1. Interactive World Map</h2>
 
             <p>
-                A world map built with the <strong>Leaflet</strong> library and
-                open OpenStreetMap tiles. Every country is placed using the
-                Lat / Lng coordinates that are saved in the database when the
-                countries are imported from the API on the server side.
+                The system includes an interactive world map created with the
+                <strong>Leaflet</strong> library and OpenStreetMap.
+            </p>
+
+            <p>
+                Every country is displayed according to the latitude and
+                longitude saved in the database during the countries import.
             </p>
 
             <ul>
                 <li>
-                    Markers are coloured by the personal lists of the logged-in user:
-                    green for "Visited", blue for "Want to visit".
+                    Countries are displayed using interactive map markers.
                 </li>
-                <li>The map can be filtered by region.</li>
+
                 <li>
-                    Clicking a marker opens the flag, capital, population and a
-                    link to the country page.
+                    Countries can be searched by country name or capital city.
+                </li>
+
+                <li>
+                    The map can be filtered by region.
+                </li>
+
+                <li>
+                    Clicking a marker displays the flag, capital, region,
+                    population and a link to the full country page.
                 </li>
             </ul>
 
-            <input type="button" value="Go to the map"
-                   onclick="window.location.href='Map.html'" />
+            <input type="button"
+                   id="mapBTN"
+                   value="Go to the map" />
         </div>
 
-        <!-- ---------- 2. quizzes ---------- -->
-        <div class="card-box">
-            <h2>2. Timed Quizzes</h2>
+        <!-- Quizzes -->
+        <div class="card-box advanced-card">
+            <h2>2. Timed Country Quizzes</h2>
 
             <p>
-                Two quizzes are built dynamically from the country data in the
-                database: <strong>Guess the Capital</strong> and
-                <strong>Guess the Flag</strong>. The questions and the wrong
-                answers are chosen randomly on the server, so every game is
-                different.
-            </p>
-
-            <p>
-                <strong>Security:</strong> the time limit is checked on the
-                server and not only by the timer in the browser, so a player
-                cannot pass the limit by changing the page. Results are saved
-                and shown in a high score table.
-            </p>
-        </div>
-
-        <!-- ---------- 3. realtime ---------- -->
-        <div class="card-box">
-            <h2>3. Real Time Updates (Polling)</h2>
-
-            <p>
-                The shares page asks the server for new content every 10 seconds
-                using <strong>polling</strong>, so shares written by other users
-                appear without refreshing the page. A message tells the user how
-                many new shares arrived, and live updates can be switched off.
-            </p>
-
-            <p>
-                The administration statistics use the same technique and refresh
-                every 15 seconds.
-            </p>
-        </div>
-
-        <!-- ---------- 4. AI ---------- -->
-        <div class="card-box">
-            <h2>4. Artificial Intelligence Module</h2>
-
-            <p>
-                A language model is used to enrich the content of the site:
+                Registered users can complete timed quizzes about countries,
+                capitals, currencies, regions and country codes.
             </p>
 
             <ul>
-                <li>An automatic travel summary for each country on the details page.</li>
                 <li>
-                    Destination recommendations based on the continents and
-                    languages the user saved in the preferences.
+                    Quiz information and questions are loaded from the database.
+                </li>
+
+                <li>
+                    Every quiz has a time limit.
+                </li>
+
+                <li>
+                    Answers are checked by the server.
+                </li>
+
+                <li>
+                    The score and number of correct answers are saved after
+                    completion.
+                </li>
+
+                <li>
+                    Users can view their previous attempts and total quiz
+                    points.
                 </li>
             </ul>
 
-            <p class="error">
-                To complete: replace this section with the exact description of
-                the AI module you added.
-            </p>
-            <!-- ---------- 5. technical ---------- -->
-            <div class="card-box">
-                <h2>5. Technical Highlights</h2>
+            <input type="button"
+                   id="quizBTN"
+                   value="Go to quizzes" />
+        </div>
 
-                <ul>
-                    <li>
-                        <strong>Password security:</strong> passwords are stored only
-                        as a hash. The verification is done on the server in C# and
-                        never inside an SQL query.
-                    </li>
-                    <li>
-                        <strong>Three layer architecture:</strong> a clear separation
-                        between the Controllers, the model logic and the DAL. Every
-                        database access goes through stored procedures with
-                        parameters, which protects against SQL injection.
-                    </li>
-                    <li>
-                        <strong>Data binding:</strong> the countries list and the
-                        users table use DataTables, with a switch between a card view
-                        and a table view.
-                    </li>
-                    <li>
-                        <strong>One AJAX layer:</strong> all the calls to the server
-                        go through a single <code>ajaxCall</code> function, and all
-                        the addresses are defined once in <code>common.js</code>.
-                    </li>
-                </ul>
-            </div>
+        <!-- Polling -->
+        <div class="card-box advanced-card">
+            <h2>3. Live Shares Updates</h2>
 
-            <p class="error">
-                Note: update this page according to the features you actually
-                implement. This page is required by the project instructions.
+            <p>
+                The shares page supports automatic live updates using
+                <strong>polling</strong>.
             </p>
+
+            <p>
+                When live updates are enabled, the client requests updated
+                information from the server every 10 seconds. New shares can
+                therefore appear without manually refreshing the page.
+            </p>
+
+            <ul>
+                <li>
+                    Shares can be filtered by country.
+                </li>
+
+                <li>
+                    Users can search inside the share content.
+                </li>
+
+                <li>
+                    A user may edit or delete only their own shares.
+                </li>
+
+                <li>
+                    Shares display the user, country and publication date.
+                </li>
+            </ul>
+
+            <input type="button"
+                   id="sharesBTN"
+                   value="Go to shares" />
+        </div>
+
+        <!-- Personal lists -->
+        <div class="card-box advanced-card">
+            <h2>4. Personal Country Lists</h2>
+
+            <p>
+                Every registered user can create personal lists of countries.
+            </p>
+
+            <ul>
+                <li>
+                    Countries can be added to a
+                    <strong>Visited</strong> list.
+                </li>
+
+                <li>
+                    Countries can be added to a
+                    <strong>Want to visit</strong> list.
+                </li>
+
+                <li>
+                    A country can be moved from one list to the other.
+                </li>
+
+                <li>
+                    Saved countries can be removed from the lists.
+                </li>
+
+                <li>
+                    Every saved item contains the date on which it was added.
+                </li>
+            </ul>
+
+            <input type="button"
+                   id="listsBTN"
+                   value="Go to my lists" />
+        </div>
+
+        <!-- Import and country information -->
+        <div class="card-box advanced-card">
+            <h2>5. Countries API and Database Import</h2>
+
+            <p>
+                Country information is collected on the server side from the
+                <strong>countries.dev</strong> API.
+            </p>
+
+            <p>
+                The imported information is converted into the system's country
+                model and stored in SQL Server.
+            </p>
+
+            <ul>
+                <li>
+                    Country names, codes, capitals and regions.
+                </li>
+
+                <li>
+                    Population, area and coordinates.
+                </li>
+
+                <li>
+                    Flags and demonyms.
+                </li>
+
+                <li>
+                    Multiple languages for each country.
+                </li>
+
+                <li>
+                    Multiple currencies for each country.
+                </li>
+            </ul>
+        </div>
+
+        <!-- Technical information -->
+        <div class="card-box advanced-card">
+            <h2>6. Technical Highlights</h2>
+
+            <ul class="technical-list">
+                <li>
+                    <span class="feature-label">Password security:</span>
+                    passwords are stored as hashes and are never saved as plain
+                    text in the database.
+                </li>
+
+                <li>
+                    <span class="feature-label">Three-layer architecture:</span>
+                    the Controllers, Models and DAL have separate
+                    responsibilities.
+                </li>
+
+                <li>
+                    <span class="feature-label">Stored procedures:</span>
+                    database operations are performed using SQL Server stored
+                    procedures with parameters.
+                </li>
+
+                <li>
+                    <span class="feature-label">REST API:</span>
+                    the client communicates with the ASP.NET server using GET,
+                    POST, PUT and DELETE requests.
+                </li>
+
+                <li>
+                    <span class="feature-label">AJAX:</span>
+                    client requests are sent through the shared
+                    <code>ajaxCall</code> function.
+                </li>
+
+                <li>
+                    <span class="feature-label">Local storage:</span>
+                    the logged-in user's information is retained between client
+                    pages.
+                </li>
+
+                <li>
+                    <span class="feature-label">Dynamic rendering:</span>
+                    countries, personal lists, shares, quizzes and map markers
+                    are generated from server responses.
+                </li>
+            </ul>
         </div>
     </div>
 </body>
