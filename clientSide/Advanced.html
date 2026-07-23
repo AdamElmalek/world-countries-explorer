@@ -1,0 +1,172 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Advanced Features - World Countries</title>
+
+    <link rel="stylesheet" href="style.css" />
+
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+    <script src="ajaxCalls.js"></script>
+    <script src="common.js"></script>
+
+    <script>
+        let countries = [];
+
+
+
+        $(document).ready(function () {
+            buildMenu("advanced");
+
+
+
+
+        });
+
+        function loadCountriesFunc() {
+            let url = countriesApi + "?search=&region=&language=&currency=" + "& sortBy=name& dir=asc";
+            ajaxCall("GET", url, null, loadCountriesSuccess, error);
+
+        }
+
+        function loadCountriesSuccess(data) {
+            countries = data;
+
+            fillCountryDropdowns();
+        }
+
+    </script>
+</head>
+<body>
+    <div class="page">
+        <div id="menuPH"></div>
+
+        <h1>Advanced Features</h1>
+
+        <p>
+            In addition to the required basic functionality, the following
+            features were added to the system.
+        </p>
+
+        <!-- ---------- 1. map ---------- -->
+        <div class="card-box">
+            <h2>1. Interactive Map</h2>
+
+            <p>
+                A world map built with the <strong>Leaflet</strong> library and
+                open OpenStreetMap tiles. Every country is placed using the
+                Lat / Lng coordinates that are saved in the database when the
+                countries are imported from the API on the server side.
+            </p>
+
+            <ul>
+                <li>
+                    Markers are coloured by the personal lists of the logged-in user:
+                    green for "Visited", blue for "Want to visit".
+                </li>
+                <li>The map can be filtered by region.</li>
+                <li>
+                    Clicking a marker opens the flag, capital, population and a
+                    link to the country page.
+                </li>
+            </ul>
+
+            <input type="button" value="Go to the map"
+                   onclick="window.location.href='Map.html'" />
+        </div>
+
+        <!-- ---------- 2. quizzes ---------- -->
+        <div class="card-box">
+            <h2>2. Timed Quizzes</h2>
+
+            <p>
+                Two quizzes are built dynamically from the country data in the
+                database: <strong>Guess the Capital</strong> and
+                <strong>Guess the Flag</strong>. The questions and the wrong
+                answers are chosen randomly on the server, so every game is
+                different.
+            </p>
+
+            <p>
+                <strong>Security:</strong> the time limit is checked on the
+                server and not only by the timer in the browser, so a player
+                cannot pass the limit by changing the page. Results are saved
+                and shown in a high score table.
+            </p>
+        </div>
+
+        <!-- ---------- 3. realtime ---------- -->
+        <div class="card-box">
+            <h2>3. Real Time Updates (Polling)</h2>
+
+            <p>
+                The shares page asks the server for new content every 10 seconds
+                using <strong>polling</strong>, so shares written by other users
+                appear without refreshing the page. A message tells the user how
+                many new shares arrived, and live updates can be switched off.
+            </p>
+
+            <p>
+                The administration statistics use the same technique and refresh
+                every 15 seconds.
+            </p>
+        </div>
+
+        <!-- ---------- 4. AI ---------- -->
+        <div class="card-box">
+            <h2>4. Artificial Intelligence Module</h2>
+
+            <p>
+                A language model is used to enrich the content of the site:
+            </p>
+
+            <ul>
+                <li>An automatic travel summary for each country on the details page.</li>
+                <li>
+                    Destination recommendations based on the continents and
+                    languages the user saved in the preferences.
+                </li>
+            </ul>
+
+            <p class="error">
+                To complete: replace this section with the exact description of
+                the AI module you added.
+            </p>
+            <!-- ---------- 5. technical ---------- -->
+            <div class="card-box">
+                <h2>5. Technical Highlights</h2>
+
+                <ul>
+                    <li>
+                        <strong>Password security:</strong> passwords are stored only
+                        as a hash. The verification is done on the server in C# and
+                        never inside an SQL query.
+                    </li>
+                    <li>
+                        <strong>Three layer architecture:</strong> a clear separation
+                        between the Controllers, the model logic and the DAL. Every
+                        database access goes through stored procedures with
+                        parameters, which protects against SQL injection.
+                    </li>
+                    <li>
+                        <strong>Data binding:</strong> the countries list and the
+                        users table use DataTables, with a switch between a card view
+                        and a table view.
+                    </li>
+                    <li>
+                        <strong>One AJAX layer:</strong> all the calls to the server
+                        go through a single <code>ajaxCall</code> function, and all
+                        the addresses are defined once in <code>common.js</code>.
+                    </li>
+                </ul>
+            </div>
+
+            <p class="error">
+                Note: update this page according to the features you actually
+                implement. This page is required by the project instructions.
+            </p>
+        </div>
+    </div>
+</body>
+</html>
