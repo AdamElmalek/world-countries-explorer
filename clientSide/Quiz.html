@@ -13,13 +13,15 @@
 
     <script>
         let user = null;
+        let quizzes = [];
+        let currentQuiz = null;
+        let currentQuestions = [];
+        let attemptId = 0;
 
-        let quiz = null;          // the quiz that came from the server
-        let currentQuestion = 0;
-        let answers = [];
         let timerId = null;
         let secondsLeft = 0;
-        let startTime = 0;
+        let attemptStartedAt = 0;
+        let quizFinished = false;
 
         $(document).ready(function () {
             if (!requireLogin()) {
@@ -27,296 +29,528 @@
             }
 
             user = getLoggedUser();
-
             buildMenu("quiz");
 
-            $("#capitalQuizBTN").click(function () {
-                startQuizFunc("capital");
-            });
+            $("#submitBTN").click(submitQuizFunc);
+            $("#backToQuizzesBTN").click(resetQuizPage);
 
-            $("#flagQuizBTN").click(function () {
-                startQuizFunc("flag");
-            });
-
-            $("#nextBTN").click(nextQuestionFunc);
-
-            $("#playAgainBTN").click(function () {
-                window.location.reload();
-            });
-
-            $("#gameDiv").hide();
-            $("#resultDiv").hide();
-
-            loadScoresFunc("capital");
+            loadQuizzesFunc();
+            loadPointsFunc();
+            loadAttemptsFunc();
         });
 
 
-        function startQuizFunc(quizType) {
-            ajaxCall("GET", quizApi + "/Start/" + quizType, null,
-                startQuizSuccess, error);
+        // Active quizzes
+        function loadQuizzesFunc() {
+            ajaxCall("GET", quizApi, null, loadQuizzesSuccess, error);
         }
 
-        function startQuizSuccess(quizData) {
-            quiz = quizData;
-            currentQuestion = 0;
-            answers = [];
-            startTime = new Date().getTime();
+        function loadQuizzesSuccess(data) {
+            quizzes = data;
 
-            $("#chooserDiv").hide();
-            $("#gameDiv").show();
-
-            let seconds = quiz.timeLimitSeconds;
-
-            if (seconds == null) {
-                seconds = 60;
-            }
-
-            startTimer(seconds);
-            showQuestion();
-        }
-
-        function startTimer(seconds) {
-            secondsLeft = seconds;
-            $("#timerPH").html(secondsLeft);
-            $("#timerPH").removeClass("danger");
-
-            timerId = setInterval(function () {
-                secondsLeft = secondsLeft - 1;
-                $("#timerPH").html(secondsLeft);
-
-                if (secondsLeft <= 10) {
-                    $("#timerPH").addClass("danger");
-                }
-
-                if (secondsLeft <= 0) {
-                    clearInterval(timerId);
-                    finishQuizFunc(true);
-                }
-            }, 1000);
-        }
-
-
-        // Questions
-
-        function showQuestion() {
-            let question = quiz.questions[currentQuestion];
-
-            $("#progressPH").html(
-                "Question " + (currentQuestion + 1) + " of " + quiz.questions.length
-            );
-
-            $("#questionPH").html(safeText(question.questionText));
-
-            if (question.imageUrl != null && question.imageUrl != "") {
-                $("#imagePH").html(
-                    `<img src="${safeText(question.imageUrl)}" height="130" />`
-                );
-            }
-            else {
-                $("#imagePH").html("");
+            if (quizzes.length == 0) {
+                $("#quizzesPH").html("<p>There are no active quizzes.</p>");
+                return;
             }
 
             let str = "";
 
-            for (let i = 0; i < question.options.length; i++) {
+            for (let i = 0; i < quizzes.length; i++) {
+                let quiz = quizzes[i];
+
                 str += `
-                        <button class="quiz-option" id="option_${i}"
-                                onclick="chooseAnswerFunc(${i})">
-                            ${safeText(question.options[i])}
-                        </button>
+                        <div class="quiz-card">
+                            <h2>${safeText(quiz.title)}</h2>
+
+                            <p>${safeText(quiz.description)}</p>
+
+                            <div>
+                                Questions: ${quiz.questionsCount}
+                                |
+                                Maximum score: ${quiz.maximumScore}
+                                |
+                                Time: ${quiz.timeLimitSeconds} seconds
+                            </div>
+
+                            <button onclick="startQuizFunc(${quiz.quizId})">
+                                Start quiz
+                            </button>
+                        </div>
                     `;
             }
 
-            $("#optionsPH").html(str);
-            $("#nextBTN").hide();
+            $("#quizzesPH").html(str);
         }
 
-        function chooseAnswerFunc(index) {
-            let question = quiz.questions[currentQuestion];
 
-            // stop the player from answering twice
-            $(".quiz-option").attr("onclick", "");
+        // Start quiz
+        function startQuizFunc(quizId) {
+            currentQuiz = null;
 
-            answers.push({
-                questionId: question.questionId,
-                selected: question.options[index]
-            });
+            for (let i = 0; i < quizzes.length; i++) {
+                if (quizzes[i].quizId == quizId) {
+                    currentQuiz = quizzes[i];
+                    break;
+                }
+            }
 
-            $("#option_" + index).addClass("correct");
+            if (currentQuiz == null) {
+                swal("Error", "Quiz was not found", "error");
+                return;
+            }
 
-            $("#nextBTN").show();
+            swal({
+                title: "Start quiz?",
+                text: "You will have " + currentQuiz.timeLimitSeconds + " seconds.",
+                icon: "info",
+                buttons: true
+            })
+                .then(function (startQuiz) {
+                    if (startQuiz) {
+                        let url = quizApi + "/" + quizId +
+                            "/Start?userId=" + user.userId;
+
+                        ajaxCall("POST", url, null, startAttemptSuccess, error);
+                    }
+                });
         }
 
-        function nextQuestionFunc() {
-            currentQuestion = currentQuestion + 1;
+        function startAttemptSuccess(result) {
+            attemptId = result;
+            attemptStartedAt = Date.now();
+            quizFinished = false;
 
-            if (currentQuestion >= quiz.questions.length) {
-                finishQuizFunc(false);
+            ajaxCall(
+                "GET",
+                quizApi + "/" + currentQuiz.quizId + "/Questions",
+                null,
+                loadQuestionsSuccess,
+                error
+            );
+        }
+
+
+        // Questions
+        function loadQuestionsSuccess(questions) {
+            currentQuestions = questions;
+
+            let str = "";
+
+            for (let i = 0; i < questions.length; i++) {
+                let question = questions[i];
+
+                str += `
+                        <div class="question-card">
+                            <h3>
+                                ${i + 1}. ${safeText(question.questionText)}
+                            </h3>
+
+                            ${createOption(
+                    question.questionId,
+                    "A",
+                    question.optionA
+                )}
+
+                            ${createOption(
+                    question.questionId,
+                    "B",
+                    question.optionB
+                )}
+
+                            ${createOption(
+                    question.questionId,
+                    "C",
+                    question.optionC
+                )}
+
+                            ${createOption(
+                    question.questionId,
+                    "D",
+                    question.optionD
+                )}
+                        </div>
+                    `;
+            }
+
+            $("#questionsPH").html(str);
+            $("#quizTitlePH").text(currentQuiz.title);
+
+            $("#quizListDiv").hide();
+            $("#resultDiv").hide();
+            $("#quizAreaDiv").show();
+
+            startTimerFunc();
+        }
+
+        function createOption(questionId, optionLetter, optionText) {
+            return `
+                    <label class="answer-option">
+                        <input type="radio"
+                               name="question_${questionId}"
+                               value="${optionLetter}" />
+
+                        <strong>${optionLetter}.</strong>
+                        ${safeText(optionText)}
+                    </label>
+                `;
+        }
+
+
+        // Timer
+        function startTimerFunc() {
+            let passedSeconds =
+                Math.floor((Date.now() - attemptStartedAt) / 1000);
+
+            secondsLeft =
+                currentQuiz.timeLimitSeconds - passedSeconds;
+
+            if (secondsLeft < 0) {
+                secondsLeft = 0;
+            }
+
+            showTimer();
+
+            timerId = setInterval(function () {
+                secondsLeft--;
+                showTimer();
+
+                if (secondsLeft <= 0) {
+                    clearInterval(timerId);
+                    submitQuizRequest();
+                }
+            }, 1000);
+        }
+
+        function showTimer() {
+            $("#timerPH").text("Time left: " + secondsLeft + " seconds");
+
+            if (secondsLeft <= 10) {
+                $("#timerPH").addClass("timer-warning");
             }
             else {
-                showQuestion();
+                $("#timerPH").removeClass("timer-warning");
             }
         }
-        function finishQuizFunc(timeIsOver) {
-            clearInterval(timerId);
 
-            let duration = Math.round(
-                (new Date().getTime() - startTime) / 1000
-            );
+
+        // Submit quiz
+        function submitQuizFunc() {
+            if (quizFinished) {
+                return;
+            }
+
+            let answers = collectAnswers();
+
+            if (answers.length < currentQuestions.length) {
+                swal({
+                    title: "Some questions are unanswered",
+                    text: "Do you still want to submit?",
+                    icon: "warning",
+                    buttons: true
+                })
+                    .then(function (submitQuiz) {
+                        if (submitQuiz) {
+                            submitQuizRequest();
+                        }
+                    });
+
+                return;
+            }
+
+            submitQuizRequest();
+        }
+
+        function collectAnswers() {
+            let answers = [];
+
+            for (let i = 0; i < currentQuestions.length; i++) {
+                let question = currentQuestions[i];
+
+                let selectedOption = $(
+                    "input[name='question_" +
+                    question.questionId +
+                    "']:checked"
+                ).val();
+
+                if (selectedOption != null) {
+                    answers.push({
+                        questionId: question.questionId,
+                        selectedOption: selectedOption
+                    });
+                }
+            }
+
+            return answers;
+        }
+
+        function submitQuizRequest() {
+            if (quizFinished) {
+                return;
+            }
+
+            quizFinished = true;
+            clearInterval(timerId);
+            $("#submitBTN").prop("disabled", true);
 
             let request = {
-                quizType: quiz.quizType,
+                attemptId: attemptId,
                 userId: user.userId,
-                answers: answers,
-                durationSeconds: duration
+                quizId: currentQuiz.quizId,
+                answers: collectAnswers()
             };
 
-            $("#gameDiv").hide();
+            ajaxCall(
+                "POST",
+                quizApi + "/Submit",
+                request,
+                submitQuizSuccess,
+                submitQuizError
+            );
+        }
+
+        function submitQuizSuccess(result) {
+            $("#quizAreaDiv").hide();
             $("#resultDiv").show();
 
-            if (timeIsOver) {
-                $("#resultTitlePH").html("Time is over!");
+            let message = "";
+
+            if (result.timeExpired) {
+                message = `
+                        <h2>Time expired</h2>
+                        <p>Your quiz was submitted after the time limit.</p>
+                    `;
             }
             else {
-                $("#resultTitlePH").html("Well done!");
+                message = `
+                        <h2>Quiz completed</h2>
+
+                        <p>
+                            Correct answers:
+                            <strong>
+                                ${result.correctAnswers} /
+                                ${result.totalQuestions}
+                            </strong>
+                        </p>
+
+                        <p>
+                            Score:
+                            <strong>${result.score}</strong>
+                        </p>
+                    `;
             }
 
-            ajaxCall("POST", quizApi + "/Answer", request, finishQuizSuccess, error);
+            message += `
+                    <p>
+                        Your total quiz points:
+                        <strong>${result.totalPoints}</strong>
+                    </p>
+                `;
+
+            $("#resultPH").html(message);
+
+            loadPointsFunc();
+            loadAttemptsFunc();
         }
 
-        function finishQuizSuccess(result) {
-            $("#scorePH").html(result.score + " points");
+        function submitQuizError(err) {
+            quizFinished = false;
+            $("#submitBTN").prop("disabled", false);
+            error(err);
+        }
 
-            $("#detailPH").html(
-                "You answered " + result.correct +
-                " out of " + result.total + " correctly"
+
+        // Points and history
+        function loadPointsFunc() {
+            ajaxCall(
+                "GET",
+                quizApi + "/User/" + user.userId + "/Points",
+                null,
+                function (points) {
+                    $("#pointsPH").text(points);
+                },
+                error
             );
-
-            loadScoresFunc(quiz.quizType);
         }
 
-        // High scores
-
-        function loadScoresFunc(quizType) {
-            ajaxCall("GET", quizApi + "/Scores/" + quizType, null,
-                loadScoresSuccess, scoresError);
+        function loadAttemptsFunc() {
+            ajaxCall(
+                "GET",
+                quizApi + "/User/" + user.userId + "/Attempts",
+                null,
+                loadAttemptsSuccess,
+                error
+            );
         }
 
-        function loadScoresSuccess(scores) {
-            if (scores.length == 0) {
-                $("#scoresPH").html("<p>There are no results yet</p>");
+        function loadAttemptsSuccess(attempts) {
+            if (attempts.length == 0) {
+                $("#attemptsPH").html(
+                    "<p>You have not completed a quiz yet.</p>"
+                );
+
                 return;
             }
 
             let str = `
-                    <table class="scores-table">
-                        <tr>
-                            <th>#</th>
-                            <th>Name</th>
-                            <th>Score</th>
-                            <th>Time</th>
-                        </tr>
+                    <table class="attempts-table">
+                        <thead>
+                            <tr>
+                                <th>Quiz</th>
+                                <th>Score</th>
+                                <th>Correct answers</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
                 `;
 
-            for (let i = 0; i < scores.length; i++) {
+            for (let i = 0; i < attempts.length; i++) {
+                let attempt = attempts[i];
+
+                let dateText = "Not completed";
+
+                if (attempt.isCompleted) {
+                    dateText = new Date(
+                        attempt.finishedAt
+                    ).toLocaleString();
+                }
+
                 str += `
                         <tr>
-                            <td>${i + 1}</td>
-                            <td>${safeText(scores[i].fullName)}</td>
-                            <td>${scores[i].score}</td>
-                            <td>${scores[i].durationSeconds} sec</td>
+                            <td>${safeText(attempt.title)}</td>
+                            <td>${attempt.score}</td>
+                            <td>
+                                ${attempt.correctAnswers} /
+                                ${attempt.totalQuestions}
+                            </td>
+                            <td>${safeText(dateText)}</td>
                         </tr>
                     `;
             }
 
-            str += "</table>";
+            str += "</tbody></table>";
 
-            $("#scoresPH").html(str);
+            $("#attemptsPH").html(str);
         }
 
-        function scoresError(err) {
-            console.log(err);
-            $("#scoresPH").html("<p>Could not load the high scores</p>");
-        }
 
+        // Return to quiz list
+        function resetQuizPage() {
+            clearInterval(timerId);
+
+            currentQuiz = null;
+            currentQuestions = [];
+            attemptId = 0;
+            quizFinished = false;
+
+            $("#submitBTN").prop("disabled", false);
+            $("#timerPH").removeClass("timer-warning");
+
+            $("#resultDiv").hide();
+            $("#quizAreaDiv").hide();
+            $("#quizListDiv").show();
+        }
     </script>
+
     <style>
-        .quiz-head {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+        .quiz-card,
+        .question-card {
+            background: white;
+            padding: 18px;
+            margin-bottom: 14px;
+            border-radius: 8px;
+            box-shadow: 0 2px 7px rgba(0, 0, 0, 0.08);
+        }
+
+            .quiz-card button {
+                margin-top: 12px;
+            }
+
+        .answer-option {
+            display: block;
+            padding: 10px;
+            margin: 7px 0;
+            border: 1px solid #d8e0eb;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+            .answer-option:hover {
+                background: #eef4ff;
+            }
+
+        #timerPH {
+            font-size: 20px;
+            font-weight: bold;
+            color: #1f4e79;
             margin-bottom: 15px;
         }
 
-        .scores-table {
+        .timer-warning {
+            color: #c0392b !important;
+        }
+
+        .attempts-table {
             width: 100%;
             border-collapse: collapse;
             background: white;
         }
 
-            .scores-table th {
-                background: #1f4e79;
-                color: white;
-                padding: 9px;
-                text-align: right;
+            .attempts-table th,
+            .attempts-table td {
+                padding: 10px;
+                text-align: left;
+                border-bottom: 1px solid #ddd;
             }
 
-            .scores-table td {
-                padding: 8px 9px;
-                border-bottom: 1px solid #eee;
+            .attempts-table th {
+                background: #eaf0f8;
             }
 
-        .quiz-box {
-            text-align: center;
-            padding: 30px;
+        #quizAreaDiv,
+        #resultDiv {
+            display: none;
         }
     </style>
 </head>
+
 <body>
     <div class="page">
         <div id="menuPH"></div>
 
-        <h1>Quiz</h1>
+        <h1>Country Quizzes</h1>
 
-        <!-- ---------- choose a quiz ---------- -->
-        <div id="chooserDiv" class="countries-grid">
-            <div class="card-box quiz-box">
-                <h2>Guess the Capital</h2>
-                <p>5 questions, 60 seconds, 10 points per question</p>
-                <input type="button" id="capitalQuizBTN" value="Start" />
-            </div>
-
-            <div class="card-box quiz-box">
-                <h2>Guess the Flag</h2>
-                <p>5 questions, 60 seconds, 10 points per question</p>
-                <input type="button" id="flagQuizBTN" value="Start" />
-            </div>
+        <div class="card-box">
+            Your total quiz points:
+            <strong id="pointsPH">0</strong>
         </div>
 
-        <!-- ---------- the quiz ---------- -->
-        <div id="gameDiv" class="card-box">
-            <div class="quiz-head">
-                <span id="progressPH"></span>
-                <span id="timerPH" class="timer"></span>
-            </div>
-
-            <h2 id="questionPH"></h2>
-            <div id="imagePH"></div>
-            <div id="optionsPH"></div>
-
-            <input type="button" id="nextBTN" value="Next question" />
+        <div id="quizListDiv">
+            <h2>Available quizzes</h2>
+            <div id="quizzesPH"></div>
         </div>
 
-        <!-- ---------- result ---------- -->
-        <div id="resultDiv" class="card-box quiz-box">
-            <h2 id="resultTitlePH"></h2>
-            <h1 id="scorePH"></h1>
-            <p id="detailPH"></p>
-            <input type="button" id="playAgainBTN" value="Play again" />
+        <div id="quizAreaDiv">
+            <h2 id="quizTitlePH"></h2>
+
+            <div id="timerPH"></div>
+            <div id="questionsPH"></div>
+
+            <input type="button"
+                   id="submitBTN"
+                   value="Submit quiz" />
         </div>
 
-        <h2>High Scores</h2>
-        <div id="scoresPH"></div>
+        <div id="resultDiv" class="card-box">
+            <div id="resultPH"></div>
+
+            <input type="button"
+                   id="backToQuizzesBTN"
+                   value="Back to quizzes" />
+        </div>
+
+        <h2>My quiz history</h2>
+        <div id="attemptsPH"></div>
     </div>
 </body>
 </html>
