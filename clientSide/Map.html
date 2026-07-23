@@ -2,195 +2,370 @@
 <html>
 <head>
     <meta charset="utf-8" />
-    <title>Map - World Countries</title>
+    <title>World Map - World Countries</title>
+
+    <link rel="stylesheet"
+          href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 
     <link rel="stylesheet" href="style.css" />
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
     <script src="ajaxCalls.js"></script>
     <script src="common.js"></script>
 
     <script>
-        let user = null;
-        let map = null;
-        let markersLayer = null;
-
+        let map;
+        let markerLayer;
         let countries = [];
-        let listOfCountry = {};   // countryId -> Visited / WantToVisit
-
-        const COLORS = {
-            Visited: "#2e7d32",
-            WantToVisit: "#1565c0",
-            none: "#8a97a8"
-        };
+        let displayedCountries = [];
 
         $(document).ready(function () {
             buildMenu("map");
 
-            user = getLoggedUser();
+            $("#searchBTN").click(filterMapFunc);
+            $("#clearBTN").click(clearFiltersFunc);
 
-            initMap();
+            $("#searchTB").keyup(function (event) {
+                if (event.key == "Enter") {
+                    filterMapFunc();
+                }
+            });
 
-            $("#regionDD").change(drawMarkers);
-
+            initializeMap();
             loadCountriesFunc();
         });
 
-        function initMap() {
-            map = L.map("mapDiv").setView([25, 15], 2);
 
-            L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-                attribution: "&copy; OpenStreetMap contributors",
-                maxZoom: 10
-            }).addTo(map);
+        // Initialize the Leaflet world map.
+        function initializeMap() {
+            map = L.map("map").setView([20, 0], 2);
 
-            markersLayer = L.layerGroup().addTo(map);
+            L.tileLayer(
+                "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+                {
+                    maxZoom: 18,
+                    attribution:
+                        '&copy; <a href="https://www.openstreetmap.org/copyright">' +
+                        'OpenStreetMap contributors</a>'
+                }
+            ).addTo(map);
+
+            markerLayer = L.layerGroup().addTo(map);
         }
 
 
-        // Load the data
+        // Load countries from our server.
         function loadCountriesFunc() {
-            ajaxCall("GET", countriesApi, null, loadCountriesSuccess, error);
+            let url = countriesApi +
+                "?search=" +
+                "&region=" +
+                "&language=" +
+                "&currency=" +
+                "&sortBy=name" +
+                "&dir=asc";
+
+            ajaxCall("GET", url, null, loadCountriesSuccess, error);
         }
 
-        function loadCountriesSuccess(countriesData) {
-            countries = countriesData;
+        function loadCountriesSuccess(data) {
+            countries = data;
 
-            fillRegionDropDown();
-
-            // a logged-in user also sees his own lists on the map
-            if (isLoggedIn()) {
-                loadListFunc("Visited");
-            }
-            else {
-                drawMarkers();
-            }
+            fillRegionsDropdown();
+            displayMarkers(countries);
         }
 
-        function loadListFunc(listType) {
-            ajaxCall("GET",
-                listsApi + "/" + listType + "?userId=" + user.userId,
-                null,
-                function (list) {
-                    for (let i = 0; i < list.length; i++) {
-                        listOfCountry[list[i].countryId] = listType;
-                    }
 
-                    if (listType == "Visited") {
-                        // now load the second list
-                        loadListFunc("WantToVisit");
-                    }
-                    else {
-                        drawMarkers();
-                    }
-                },
-                function (err) {
-                    console.log(err);
-                    drawMarkers();
-                });
-        }
-
-        function fillRegionDropDown() {
+        // Create the regions dropdown from the loaded countries.
+        function fillRegionsDropdown() {
             let regions = [];
 
             for (let i = 0; i < countries.length; i++) {
-                if (!regions.includes(countries[i].region)) {
-                    regions.push(countries[i].region);
+                let region = countries[i].region;
+
+                if (region != null &&
+                    region.trim() != "" &&
+                    !regions.includes(region)) {
+
+                    regions.push(region);
                 }
             }
 
             regions.sort();
 
-            let str = "<option value=''>All regions</option>";
+            let str = `<option value="">All regions</option>`;
 
             for (let i = 0; i < regions.length; i++) {
-                str += `<option value="${regions[i]}">${regions[i]}</option>`;
+                str += `
+                        <option value="${safeText(regions[i])}">
+                            ${safeText(regions[i])}
+                        </option>
+                    `;
             }
 
             $("#regionDD").html(str);
         }
 
-        // Draw
 
-        function drawMarkers() {
-            let region = $("#regionDD").val();
+        // Display markers for the supplied countries.
+        function displayMarkers(countriesToDisplay) {
+            markerLayer.clearLayers();
+            displayedCountries = [];
 
-            markersLayer.clearLayers();
+            let markerLocations = [];
 
-            let shown = 0;
+            for (let i = 0; i < countriesToDisplay.length; i++) {
+                let country = countriesToDisplay[i];
+
+                let latitude = Number(country.lat);
+                let longitude = Number(country.lng);
+
+                if (isNaN(latitude) || isNaN(longitude)) {
+                    continue;
+                }
+
+                // A value of 0,0 usually means coordinates were unavailable.
+                if (latitude == 0 && longitude == 0) {
+                    continue;
+                }
+
+                let marker = createCountryMarker(
+                    country,
+                    latitude,
+                    longitude
+                );
+
+                marker.addTo(markerLayer);
+
+                displayedCountries.push(country);
+                markerLocations.push([latitude, longitude]);
+            }
+
+            $("#countriesCountPH").text(
+                displayedCountries.length + " countries shown on the map"
+            );
+
+            if (markerLocations.length == 1) {
+                map.setView(markerLocations[0], 5);
+            }
+            else if (markerLocations.length > 1) {
+                map.fitBounds(markerLocations, {
+                    padding: [25, 25],
+                    maxZoom: 4
+                });
+            }
+        }
+
+
+        // Create one marker and popup.
+        function createCountryMarker(country, latitude, longitude) {
+            let marker = L.circleMarker(
+                [latitude, longitude],
+                {
+                    radius: 7,
+                    weight: 2,
+                    fillOpacity: 0.8
+                }
+            );
+
+            let flag = country.flagPngUrl;
+
+            if (flag == null || flag == "") {
+                flag = country.flagUrl;
+            }
+
+            let popup = `
+                    <div class="country-popup">
+                        <img src="${safeText(flag)}"
+                             alt="Flag of ${safeText(country.name)}" />
+
+                        <h3>${safeText(country.name)}</h3>
+
+                        <p>
+                            <strong>Capital:</strong>
+                            ${safeText(country.capital)}
+                        </p>
+
+                        <p>
+                            <strong>Region:</strong>
+                            ${safeText(country.region)}
+                        </p>
+
+                        <p>
+                            <strong>Population:</strong>
+                            ${formatNumber(country.population)}
+                        </p>
+
+                        <a class="map-details-link"
+                           href="country.html?id=${country.countryId}">
+                            View details
+                        </a>
+                    </div>
+                `;
+
+            marker.bindPopup(popup);
+
+            return marker;
+        }
+
+
+        // Search and filter the markers.
+        function filterMapFunc() {
+            let search = $("#searchTB").val().trim().toLowerCase();
+            let selectedRegion = $("#regionDD").val();
+
+            let filteredCountries = [];
 
             for (let i = 0; i < countries.length; i++) {
                 let country = countries[i];
 
-                if (region != "" && country.region != region) {
-                    continue;
+                let name = "";
+
+                if (country.name != null) {
+                    name = country.name.toLowerCase();
                 }
 
-                // a country without coordinates cannot be drawn
-                if (country.lat == null || country.lng == null) {
-                    continue;
+                let capital = "";
+
+                if (country.capital != null) {
+                    capital = country.capital.toLowerCase();
                 }
 
-                let listType = listOfCountry[country.countryId];
+                let matchesSearch =
+                    search == "" ||
+                    name.includes(search) ||
+                    capital.includes(search);
 
-                if (listType == null) {
-                    listType = "none";
+                let matchesRegion =
+                    selectedRegion == "" ||
+                    country.region == selectedRegion;
+
+                if (matchesSearch && matchesRegion) {
+                    filteredCountries.push(country);
                 }
-
-                let marker = L.circleMarker([country.lat, country.lng], {
-                    radius: (listType == "none") ? 6 : 9,
-                    color: "#ffffff",
-                    weight: 2,
-                    fillColor: COLORS[listType],
-                    fillOpacity: 0.95
-                });
-
-                marker.bindPopup(`
-                    <div style="min-width:150px">
-                        <img src="${country.flagUrl}" width="60" /><br />
-                        <strong>${country.name}</strong><br />
-                        Capital: ${country.capital}<br />
-                        Population: ${formatNumber(country.population)}<br />
-                        <a href="country.html?id=${country.countryId}">View details</a>
-                    </div>
-                `);
-
-                marker.addTo(markersLayer);
-
-                shown = shown + 1;
             }
 
-            $("#countPH").html("Showing " + shown + " countries on the map");
+            displayMarkers(filteredCountries);
+
+            if (filteredCountries.length == 0) {
+                swal(
+                    "No countries found",
+                    "No country matches the selected filters",
+                    "warning"
+                );
+            }
         }
-        </script>
+
+
+        // Clear the search and region selection.
+        function clearFiltersFunc() {
+            $("#searchTB").val("");
+            $("#regionDD").val("");
+
+            displayMarkers(countries);
+        }
+    </script>
+
+    <style>
+        .map-filters {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+
+            .map-filters input[type="text"],
+            .map-filters select {
+                padding: 9px;
+                border: 1px solid #cfd8e3;
+                border-radius: 6px;
+            }
+
+        #map {
+            width: 100%;
+            height: 650px;
+            border-radius: 8px;
+            border: 1px solid #cfd8e3;
+            z-index: 1;
+        }
+
+        #countriesCountPH {
+            margin: 10px 0;
+            color: #5c6773;
+        }
+
+        .country-popup {
+            min-width: 180px;
+            text-align: center;
+        }
+
+            .country-popup img {
+                width: 110px;
+                max-height: 75px;
+                object-fit: contain;
+                border: 1px solid #ddd;
+            }
+
+            .country-popup h3 {
+                margin: 8px 0;
+            }
+
+            .country-popup p {
+                margin: 5px 0;
+                text-align: left;
+            }
+
+        .map-details-link {
+            display: inline-block;
+            margin-top: 8px;
+            padding: 7px 12px;
+            color: white;
+            background: #4169a1;
+            text-decoration: none;
+            border-radius: 5px;
+        }
+
+            .map-details-link:hover {
+                background: #315581;
+            }
+    </style>
 </head>
+
 <body>
     <div class="page">
         <div id="menuPH"></div>
 
-        <h1>Interactive Map</h1>
+        <h1>World Countries Map</h1>
 
-        <div class="controls">
-            <span><span class="legend-dot" style="background:#2e7d32"></span> Visited</span>
-            <span><span class="legend-dot" style="background:#1565c0"></span> Want to visit</span>
-            <span><span class="legend-dot" style="background:#8a97a8"></span> Other countries</span>
+        <div class="card-box">
+            <div class="map-filters">
+                <input type="text"
+                       id="searchTB"
+                       placeholder="Search by country or capital" />
 
-            <select id="regionDD">
-                <option value="">All regions</option>
-            </select>
+                <select id="regionDD">
+                    <option value="">All regions</option>
+                </select>
+
+                <input type="button"
+                       id="searchBTN"
+                       value="Search" />
+
+                <input type="button"
+                       id="clearBTN"
+                       value="Clear" />
+            </div>
+
+            <div id="countriesCountPH">
+                Loading countries...
+            </div>
         </div>
 
-        <p id="countPH"></p>
-
-        <div id="mapDiv"></div>
-
-        <p class="share-head">
-            The coordinates come from the database and are saved when the
-            countries are imported on the server side.
-        </p>
+        <div id="map"></div>
     </div>
 </body>
 </html>
