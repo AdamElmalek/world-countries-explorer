@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using CountriesServers.Models;
+using Microsoft.AspNetCore.Mvc;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -9,35 +10,101 @@ namespace CountriesServers.Controllers
     public class AdminController : ControllerBase
     {
         // GET: api/<AdminController>
-        [HttpGet]
-        public IEnumerable<string> Get()
+        [HttpGet("{adminId}/Users")]
+        public IActionResult GetUsers(int adminId)
         {
-            return new string[] { "value1", "value2" };
+            Admin admin = new Admin();
+            admin.AdminId = adminId;
+
+            if (!admin.IsAdmin())
+            {
+                return StatusCode(403, "Admin permission is required");
+            }
+
+            return Ok(admin.GetUsers());
         }
 
-        // GET api/<AdminController>/5
-        [HttpGet("{id}")]
-        public string Get(int id)
+        [HttpPut("{adminId}/Users/{userId}/Lock")]
+        public IActionResult SetUserLocked(
+             int adminId,
+             int userId,
+             [FromBody] AdminBooleanRequest request)
         {
-            return "value";
+            Admin admin = new Admin();
+            admin.AdminId = adminId;
+
+            if (!admin.IsAdmin())
+            {
+                return StatusCode(403, "Admin permission is required");
+            }
+
+            bool result = admin.SetUserLocked(userId, request.Value);
+
+            if (result)
+            {
+                return Ok(true);
+            }
+
+            return NotFound("User was not found");
         }
 
-        // POST api/<AdminController>
-        [HttpPost]
-        public void Post([FromBody] string value)
+        [HttpPut("{adminId}/Users/{userId}/Share")]
+        public IActionResult SetUserCanShare(
+            int adminId,
+            int userId,
+            [FromBody] AdminBooleanRequest request)
         {
+            Admin admin = new Admin();
+            admin.AdminId = adminId;
+
+            if (!admin.IsAdmin())
+            {
+                return StatusCode(403, "Admin permission is required");
+            }
+
+            bool result = admin.SetUserCanShare(userId, request.Value);
+
+            if (result)
+            {
+                return Ok(true);
+            }
+
+            return NotFound("User was not found");
         }
 
-        // PUT api/<AdminController>/5
-        [HttpPut("{id}")]
-        public void Put(int id, [FromBody] string value)
+        [HttpDelete("{adminId}/Shares/{shareId}")]
+        public IActionResult DeleteShare(int adminId, int shareId)
         {
+            Admin admin = new Admin();
+            admin.AdminId = adminId;
+
+            if (!admin.IsAdmin())
+            {
+                return StatusCode(403, "Admin permission is required");
+            }
+
+            bool result = admin.DeleteShare(shareId);
+
+            if (result)
+            {
+                return Ok(true);
+            }
+
+            return NotFound("Share was not found");
         }
 
-        // DELETE api/<AdminController>/5
-        [HttpDelete("{id}")]
-        public void Delete(int id)
+        [HttpGet("{adminId}/Statistics")]
+        public IActionResult GetStatistics(int adminId)
         {
+            Admin admin = new Admin();
+            admin.AdminId = adminId;
+
+            if (!admin.IsAdmin())
+            {
+                return StatusCode(403, "Admin permission is required");
+            }
+
+            return Ok(admin.GetStatistics());
         }
     }
 }
