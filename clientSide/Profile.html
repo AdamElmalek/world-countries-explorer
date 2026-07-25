@@ -20,7 +20,6 @@
             }
 
             user = getLoggedUser();
-
             buildMenu("");
 
             $("#profileForm").submit(updateProfileFunc);
@@ -33,42 +32,60 @@
             loadLanguagesFunc();
         });
 
-
         // Personal details
-
         function loadProfileFunc() {
-            ajaxCall("GET", usersApi + "/" + user.userId, null, loadProfileSuccess, error);
+            ajaxCall(
+                "GET",
+                usersApi + "/" + user.userId,
+                null,
+                loadProfileSuccess,
+                error
+            );
         }
 
         function loadProfileSuccess(profile) {
+            user = profile;
+            saveLoggedUser(user);
+            buildMenu("");
+
             $("#nameTB").val(profile.fullName);
             $("#emailTB").val(profile.email);
         }
 
         function updateProfileFunc() {
+            let fullName = $("#nameTB").val().trim();
+            let email = $("#emailTB").val().trim().toLowerCase();
+
             let updatedUser = {
                 userId: user.userId,
-                fullName: $("#nameTB").val().trim(),
-                email: $("#emailTB").val().trim().toLowerCase(),
+                fullName: fullName,
+                email: email,
                 password: "",
                 passwordHash: "",
                 role: user.role,
-                isLocked: false,
-                canShare: true
+                isLocked: user.isLocked,
+                canShare: user.canShare,
+                createdAt: user.createdAt,
+                updatedAt: user.updatedAt,
+                lastLoginAt: user.lastLoginAt
             };
 
-            ajaxCall("PUT", usersApi + "/" + user.userId, updatedUser,
-                updateProfileSuccess, updateProfileError);
+            ajaxCall(
+                "PUT",
+                usersApi + "/" + user.userId,
+                updatedUser,
+                updateProfileSuccess,
+                updateProfileError
+            );
 
             return false;
         }
 
         function updateProfileSuccess(result) {
-            // keep the menu and localStorage up to date
             user.fullName = $("#nameTB").val().trim();
             user.email = $("#emailTB").val().trim().toLowerCase();
-            saveLoggedUser(user);
 
+            saveLoggedUser(user);
             buildMenu("");
 
             swal("Saved", "Your details were updated", "success");
@@ -77,27 +94,50 @@
         function updateProfileError(err) {
             console.log(err);
 
-            // 409 = the email belongs to another user
             if (err.status == 409) {
-                swal("Email in use", "This email belongs to another user", "warning");
+                swal(
+                    "Email in use",
+                    "This email belongs to another user",
+                    "warning"
+                );
             }
             else {
-                swal("Error", "Could not update your details", "error");
+                swal(
+                    "Error",
+                    "Could not update your details",
+                    "error"
+                );
             }
         }
-        // =====================================================
-        // Change password
-        // =====================================================
 
+        // Change password
         function changePasswordFunc() {
+            let currentPassword = $("#currentPassTB").val();
+            let newPassword = $("#newPassTB").val();
+
+            if (currentPassword == newPassword) {
+                swal(
+                    "Invalid password",
+                    "The new password must be different from the current password",
+                    "warning"
+                );
+
+                return false;
+            }
+
             let request = {
                 email: user.email,
-                currentPassword: $("#currentPassTB").val(),
-                newPassword: $("#newPassTB").val()
+                currentPassword: currentPassword,
+                newPassword: newPassword
             };
 
-            ajaxCall("PUT", usersApi + "/" + user.userId + "/Password", request,
-                changePasswordSuccess, changePasswordError);
+            ajaxCall(
+                "PUT",
+                usersApi + "/" + user.userId + "/Password",
+                request,
+                changePasswordSuccess,
+                changePasswordError
+            );
 
             return false;
         }
@@ -106,128 +146,209 @@
             $("#currentPassTB").val("");
             $("#newPassTB").val("");
 
-            swal("Saved", "Your password was updated", "success");
+            swal(
+                "Saved",
+                "Your password was updated",
+                "success"
+            );
         }
 
         function changePasswordError(err) {
             console.log(err);
-            swal("Failed", "The current password is not correct", "error");
+
+            swal(
+                "Failed",
+                "The current password is incorrect or the new password is invalid",
+                "error"
+            );
         }
 
-
         // Continent preferences
-
         function loadContinentsFunc() {
-            ajaxCall("GET", usersApi + "/" + user.userId + "/Continents", null,
-                loadContinentsSuccess, error);
+            ajaxCall(
+                "GET",
+                usersApi + "/" + user.userId + "/Continents",
+                null,
+                loadContinentsSuccess,
+                error
+            );
         }
 
         function loadContinentsSuccess(continents) {
             if (continents.length == 0) {
-                $("#continentsPH").html("<p>No continents were chosen yet</p>");
+                $("#continentsPH").html(
+                    "<p>No continents were chosen yet.</p>"
+                );
+
                 return;
             }
 
             let str = "";
 
             for (let i = 0; i < continents.length; i++) {
+                let continent = continents[i];
+
                 str += `
-                    <span class="chip">
-                        ${safeText(continents[i])}
-                        <button onclick="removeContinentFunc('${safeText(continents[i])}')">x</button>
-                    </span>
-                `;
+                            <span class="chip">
+                                ${safeText(continent)}
+                                <button type="button"
+                                        onclick="removeContinentFunc('${continent}')">
+                                    x
+                                </button>
+                            </span>
+                        `;
             }
 
             $("#continentsPH").html(str);
         }
 
         function addContinentFunc() {
+            let continentName = $("#continentDD").val();
+
             let request = {
-                continentName: $("#continentDD").val()
+                continentName: continentName
             };
 
-            ajaxCall("POST", usersApi + "/" + user.userId + "/Continents", request,
-                addContinentSuccess, addContinentError);
+            ajaxCall(
+                "POST",
+                usersApi + "/" + user.userId + "/Continents",
+                request,
+                addContinentSuccess,
+                addContinentError
+            );
         }
 
         function addContinentSuccess(result) {
             loadContinentsFunc();
+
+            swal(
+                "Added",
+                "The continent was added to your preferences",
+                "success"
+            );
         }
 
         function addContinentError(err) {
             console.log(err);
 
             if (err.status == 409) {
-                swal("Already added", "This continent is already in your list", "warning");
+                swal(
+                    "Already added",
+                    "This continent is already in your preferences",
+                    "warning"
+                );
             }
             else {
-                swal("Error", "Could not add the continent", "error");
+                swal(
+                    "Error",
+                    "Could not add the continent",
+                    "error"
+                );
             }
         }
 
         function removeContinentFunc(continentName) {
-            ajaxCall("DELETE",
-                usersApi + "/" + user.userId + "/Continents/" + encodeURIComponent(continentName),
-                null, loadContinentsFunc, error);
+            ajaxCall(
+                "DELETE",
+                usersApi + "/" + user.userId +
+                "/Continents/" + encodeURIComponent(continentName),
+                null,
+                loadContinentsFunc,
+                error
+            );
         }
 
-
         // Language preferences
-
         function loadLanguagesFunc() {
-            ajaxCall("GET", usersApi + "/" + user.userId + "/Languages", null,
-                loadLanguagesSuccess, error);
+            ajaxCall(
+                "GET",
+                usersApi + "/" + user.userId + "/Languages",
+                null,
+                loadLanguagesSuccess,
+                error
+            );
         }
 
         function loadLanguagesSuccess(languages) {
             if (languages.length == 0) {
-                $("#languagesPH").html("<p>No languages were added yet</p>");
+                $("#languagesPH").html(
+                    "<p>No languages were added yet.</p>"
+                );
+
                 return;
             }
 
-            let levels = ["Beginner", "Intermediate", "Advanced", "Native"];
+            let levels = [
+                "Beginner",
+                "Intermediate",
+                "Advanced",
+                "Native"
+            ];
+
             let str = "";
 
             for (let i = 0; i < languages.length; i++) {
-                let lang = languages[i];
-
+                let language = languages[i];
                 let options = "";
 
                 for (let j = 0; j < levels.length; j++) {
-                    let selected = (levels[j] == lang.proficiencyLevel) ? "selected" : "";
-                    options += `<option ${selected}>${levels[j]}</option>`;
+                    let selected = "";
+
+                    if (levels[j] == language.proficiencyLevel) {
+                        selected = "selected";
+                    }
+
+                    options += `
+                                <option value="${levels[j]}" ${selected}>
+                                    ${levels[j]}
+                                </option>
+                            `;
                 }
 
                 str += `
-                    <div class="lang-row">
-                        <strong>${safeText(lang.languageName)}</strong>
-                        (${safeText(lang.languageCode)})
+                            <div class="lang-row">
+                                <strong>${safeText(language.languageName)}</strong>
+                                <span>(${safeText(language.languageCode)})</span>
 
-                        <select onchange="updateLanguageFunc('${safeText(lang.languageCode)}', this.value)">
-                            ${options}
-                        </select>
+                                <select onchange="updateLanguageFunc(
+                                    '${language.languageCode}',
+                                    this.value)">
+                                    ${options}
+                                </select>
 
-                        <button class="delete-btn"
-                                onclick="removeLanguageFunc('${safeText(lang.languageCode)}')">
-                            Remove
-                        </button>
-                    </div>
-                `;
+                                <button type="button"
+                                        class="delete-btn"
+                                        onclick="removeLanguageFunc(
+                                            '${language.languageCode}')">
+                                    Remove
+                                </button>
+                            </div>
+                        `;
             }
 
             $("#languagesPH").html(str);
         }
 
         function addLanguageFunc() {
+            let languageCode =
+                $("#langCodeTB").val().trim().toLowerCase();
+
+            let languageName =
+                $("#langNameTB").val().trim();
+
             let language = {
-                languageCode: $("#langCodeTB").val().trim().toLowerCase(),
-                languageName: $("#langNameTB").val().trim(),
+                languageCode: languageCode,
+                languageName: languageName,
                 proficiencyLevel: $("#langLevelDD").val()
             };
 
-            ajaxCall("POST", usersApi + "/" + user.userId + "/Languages", language,
-                addLanguageSuccess, addLanguageError);
+            ajaxCall(
+                "POST",
+                usersApi + "/" + user.userId + "/Languages",
+                language,
+                addLanguageSuccess,
+                addLanguageError
+            );
 
             return false;
         }
@@ -235,18 +356,33 @@
         function addLanguageSuccess(result) {
             $("#langCodeTB").val("");
             $("#langNameTB").val("");
+            $("#langLevelDD").val("Beginner");
 
             loadLanguagesFunc();
+
+            swal(
+                "Added",
+                "The language was added",
+                "success"
+            );
         }
 
         function addLanguageError(err) {
             console.log(err);
 
             if (err.status == 409) {
-                swal("Already added", "This language is already in your list", "warning");
+                swal(
+                    "Already added",
+                    "This language is already in your list",
+                    "warning"
+                );
             }
             else {
-                swal("Error", "Could not add the language", "error");
+                swal(
+                    "Error",
+                    "Could not add the language",
+                    "error"
+                );
             }
         }
 
@@ -255,31 +391,86 @@
                 proficiencyLevel: proficiencyLevel
             };
 
-            ajaxCall("PUT",
-                usersApi + "/" + user.userId + "/Languages/" + languageCode,
-                request, updateLanguageSuccess, error);
+            ajaxCall(
+                "PUT",
+                usersApi + "/" + user.userId +
+                "/Languages/" + encodeURIComponent(languageCode),
+                request,
+                updateLanguageSuccess,
+                error
+            );
         }
 
         function updateLanguageSuccess(result) {
-            swal("Saved", "The level was updated", "success");
+            loadLanguagesFunc();
+
+            swal(
+                "Saved",
+                "The language level was updated",
+                "success"
+            );
         }
 
         function removeLanguageFunc(languageCode) {
-            ajaxCall("DELETE",
-                usersApi + "/" + user.userId + "/Languages/" + languageCode,
-                null, loadLanguagesFunc, error);
+            ajaxCall(
+                "DELETE",
+                usersApi + "/" + user.userId +
+                "/Languages/" + encodeURIComponent(languageCode),
+                null,
+                loadLanguagesFunc,
+                error
+            );
+        }
+    </script>
+
+    <style>
+        #profileForm,
+        #passwordForm {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
         }
 
+        .chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            background-color: #e8eef8;
+            border-radius: 18px;
+            padding: 7px 11px;
+            margin: 4px;
+        }
 
-        </script>
+            .chip button {
+                border: none;
+                background-color: transparent;
+                color: #b23b2a;
+                cursor: pointer;
+                font-weight: bold;
+                padding: 0;
+            }
+
+        .lang-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            border-bottom: 1px solid #e3e7ed;
+            padding: 10px 0;
+        }
+
+            .lang-row strong {
+                min-width: 130px;
+            }
+    </style>
 </head>
+
 <body>
     <div class="page">
         <div id="menuPH"></div>
 
         <h1>My Profile</h1>
 
-        <!-- ---------- personal details ---------- -->
         <div class="card-box">
             <h2>Personal details</h2>
 
@@ -301,7 +492,6 @@
             </form>
         </div>
 
-        <!-- ---------- password ---------- -->
         <div class="card-box">
             <h2>Change password</h2>
 
@@ -323,30 +513,29 @@
             </form>
         </div>
 
-        <!-- ---------- continents ---------- -->
         <div class="card-box">
             <h2>Favourite continents</h2>
 
             <div id="continentsPH"></div>
 
             <div class="controls">
-                <!-- these eight values match the CHECK constraint in the database -->
                 <select id="continentDD">
-                    <option>Africa</option>
-                    <option>Americas</option>
-                    <option>Asia</option>
-                    <option>Europe</option>
-                    <option>Oceania</option>
-                    <option>Polar</option>
-                    <option>Antarctic Ocean</option>
-                    <option>Antarctic</option>
+                    <option value="Africa">Africa</option>
+                    <option value="Americas">Americas</option>
+                    <option value="Asia">Asia</option>
+                    <option value="Europe">Europe</option>
+                    <option value="Oceania">Oceania</option>
+                    <option value="Polar">Polar</option>
+                    <option value="Antarctic Ocean">Antarctic Ocean</option>
+                    <option value="Antarctic">Antarctic</option>
                 </select>
 
-                <input type="button" id="addContinentBTN" value="Add continent" />
+                <input type="button"
+                       id="addContinentBTN"
+                       value="Add continent" />
             </div>
         </div>
 
-        <!-- ---------- languages ---------- -->
         <div class="card-box">
             <h2>Languages I speak</h2>
 
@@ -357,26 +546,28 @@
                        type="text"
                        placeholder="Code (en)"
                        required
-                       maxlength="10" />
+                       minlength="2"
+                       maxlength="10"
+                       pattern="[A-Za-z-]{2,10}"
+                       title="Use 2-10 English letters or hyphens" />
 
                 <input id="langNameTB"
                        type="text"
                        placeholder="Language name"
                        required
+                       minlength="2"
                        maxlength="100" />
 
                 <select id="langLevelDD">
-                    <option>Beginner</option>
-                    <option>Intermediate</option>
-                    <option>Advanced</option>
-                    <option>Native</option>
+                    <option value="Beginner">Beginner</option>
+                    <option value="Intermediate">Intermediate</option>
+                    <option value="Advanced">Advanced</option>
+                    <option value="Native">Native</option>
                 </select>
 
                 <input type="submit" value="Add language" />
             </form>
         </div>
-
     </div>
-
 </body>
 </html>

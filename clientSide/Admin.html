@@ -2,239 +2,509 @@
 <html>
 <head>
     <meta charset="utf-8" />
-    <title>Admin - World Countries</title>
+    <title>Administration - World Countries</title>
 
     <link rel="stylesheet" href="style.css" />
 
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.10.19/css/jquery.dataTables.min.css" />
-
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-    <script src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.min.js"></script>
     <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
     <script src="ajaxCalls.js"></script>
     <script src="common.js"></script>
 
     <script>
-        let usersTbl = null;
-        let statsPollingId = null;
-
-        const STATS_POLLING_SECONDS = 15;
+        let admin = null;
+        let refreshInterval = null;
 
         $(document).ready(function () {
             if (!requireAdmin()) {
                 return;
             }
 
+            admin = getLoggedUser();
+
             buildMenu("admin");
 
-            $("#importBTN").click(importCountriesFunc);
-            $("#refreshBTN").click(loadUsersFunc);
+            $("#refreshBTN").click(refreshAdminPage);
 
-            loadStatsFunc();
+            refreshAdminPage();
+
+            // Refresh statistics and information every 15 seconds
+            refreshInterval = setInterval(function () {
+                refreshAdminPage();
+            }, 15000);
+        });
+
+        // =====================================================
+        // Refresh the complete administration page
+        // =====================================================
+
+        function refreshAdminPage() {
+            loadStatisticsFunc();
             loadUsersFunc();
+            loadSharesFunc();
+        }
 
-            // the statistics refresh by themselves
-            statsPollingId = setInterval(loadStatsFunc, STATS_POLLING_SECONDS * 1000);
-        });
-
-        $(window).on("beforeunload", function () {
-            if (statsPollingId != null) {
-                clearInterval(statsPollingId);
-            }
-        });
-
+        // =====================================================
         // Statistics
-        function loadStatsFunc() {
-            ajaxCall("GET", adminApi + "/Stats", null, loadStatsSuccess, statsError);
+        // =====================================================
+
+        function loadStatisticsFunc() {
+            let api = adminApi + "/" + admin.userId + "/Statistics";
+
+            ajaxCall("GET", api, null,
+                loadStatisticsSuccess, adminError);
         }
 
-        function loadStatsSuccess(stats) {
-            let boxes = [
-                ["Logins today", stats.dailyLogins],
-                ["Countries imported", stats.countriesImported],
-                ["Countries saved in lists", stats.countriesSaved],
-                ["Shares created", stats.sharesCreated]
-            ];
+        function loadStatisticsSuccess(statistics) {
+            $("#usersCountPH").text(statistics.usersCount);
+            $("#lockedUsersCountPH").text(statistics.lockedUsersCount);
+            $("#blockedSharingCountPH").text(statistics.blockedSharingCount);
+            $("#countriesCountPH").text(statistics.countriesCount);
+            $("#sharesCountPH").text(statistics.sharesCount);
+            $("#savedCountriesCountPH").text(statistics.savedCountriesCount);
+            $("#quizAttemptsCountPH").text(
+                statistics.completedQuizAttemptsCount
+            );
 
-            let str = "";
-
-            for (let i = 0; i < boxes.length; i++) {
-                str += `
-                    <div class="stat-box">
-                        <div class="stat-number">${formatNumber(boxes[i][1])}</div>
-                        <div class="stat-label">${boxes[i][0]}</div>
-                    </div>
-                `;
-            }
-
-            $("#statsPH").html(str);
-
-            let now = new Date();
-            $("#updatedPH").html("Updated at " + now.toLocaleTimeString());
+            $("#lastRefreshPH").text(
+                "Last refresh: " + new Date().toLocaleTimeString()
+            );
         }
 
-        function statsError(err) {
-            console.log(err);
-            $("#updatedPH").html("Could not load the statistics");
-        }
-
+        // =====================================================
         // Users
+        // =====================================================
 
         function loadUsersFunc() {
-            ajaxCall("GET", adminApi + "/Users", null, loadUsersSuccess, error);
+            let api = adminApi + "/" + admin.userId + "/Users";
+
+            ajaxCall("GET", api, null,
+                loadUsersSuccess, adminError);
         }
 
         function loadUsersSuccess(users) {
-            if (usersTbl != null) {
-                usersTbl.destroy();
-                $("#usersTable tbody").empty();
+            if (users.length == 0) {
+                $("#usersPH").html("<p>No users were found.</p>");
+                return;
             }
 
-            usersTbl = $("#usersTable").DataTable({
-                data: users,
-                pageLength: 10,
-                columns: [
-                    { data: "userId" },
-                    { data: "fullName" },
-                    { data: "email" },
-                    { data: "role" },
-                    {
-                        data: "isLocked",
-                        render: function (data) {
-                            return data ? "Locked" : "Active";
-                        }
-                    },
-                    {
-                        data: "canShare",
-                        render: function (data) {
-                            return data ? "Yes" : "Blocked";
-                        }
-                    },
-                    {
-                        data: null,
-                        render: function (data, type, row) {
-                            let lockLabel = row.isLocked ? "Unlock" : "Lock";
-                            let shareLabel = row.canShare ? "Block sharing" : "Allow sharing";
+            let str = `
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Full name</th>
+                                    <th>Email</th>
+                                    <th>Role</th>
+                                    <th>Login status</th>
+                                    <th>Sharing status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                    `;
 
-                            return `
-                                <button class="lockBTN"
-                                        data-userid="${row.userId}"
-                                        data-value="${!row.isLocked}">
-                                    ${lockLabel}
+            for (let i = 0; i < users.length; i++) {
+                let user = users[i];
+
+                let lockedText = user.isLocked ? "Locked" : "Active";
+                let sharingText = user.canShare ? "Allowed" : "Blocked";
+
+                let lockButtonText = user.isLocked ? "Unlock" : "Lock";
+                let newLockValue = !user.isLocked;
+
+                let shareButtonText = user.canShare
+                    ? "Block sharing"
+                    : "Allow sharing";
+
+                let newShareValue = !user.canShare;
+
+                let actionButtons = "";
+
+                // The administrator should not lock or block themselves
+                if (user.userId == admin.userId) {
+                    actionButtons = "<span>Current administrator</span>";
+                }
+                else {
+                    actionButtons = `
+                                <button onclick="changeLockFunc(
+                                    ${user.userId},
+                                    ${newLockValue}
+                                )">
+                                    ${lockButtonText}
                                 </button>
 
-                                <button class="shareBTN"
-                                        data-userid="${row.userId}"
-                                        data-value="${!row.canShare}">
-                                    ${shareLabel}
+                                <button onclick="changeSharePermissionFunc(
+                                    ${user.userId},
+                                    ${newShareValue}
+                                )">
+                                    ${shareButtonText}
                                 </button>
                             `;
-                        }
+                }
+
+                str += `
+                            <tr>
+                                <td>${user.userId}</td>
+                                <td>${safeText(user.fullName)}</td>
+                                <td>${safeText(user.email)}</td>
+                                <td>${safeText(user.role)}</td>
+
+                                <td>
+                                    <span class="${user.isLocked
+                        ? "status-bad"
+                        : "status-good"}">
+                                        ${lockedText}
+                                    </span>
+                                </td>
+
+                                <td>
+                                    <span class="${user.canShare
+                        ? "status-good"
+                        : "status-bad"}">
+                                        ${sharingText}
+                                    </span>
+                                </td>
+
+                                <td class="action-cell">
+                                    ${actionButtons}
+                                </td>
+                            </tr>
+                        `;
+            }
+
+            str += `
+                            </tbody>
+                        </table>
+                    `;
+
+            $("#usersPH").html(str);
+        }
+
+        function changeLockFunc(userId, newValue) {
+            let actionText = newValue ? "lock" : "unlock";
+
+            swal({
+                title: "Are you sure?",
+                text: "Do you want to " + actionText + " this user?",
+                icon: "warning",
+                buttons: true,
+                dangerMode: newValue
+            })
+                .then(function (confirmed) {
+                    if (!confirmed) {
+                        return;
                     }
-                ]
-            });
 
-            buttonEvents();
-        }
-        function buttonEvents() {
-            $(document).off("click", ".lockBTN");
-            $(document).off("click", ".shareBTN");
+                    let request = {
+                        value: newValue
+                    };
 
-            $(document).on("click", ".lockBTN", function () {
-                let userId = this.getAttribute("data-userid");
-                let value = (this.getAttribute("data-value") == "true");
+                    let api = adminApi + "/" +
+                        admin.userId +
+                        "/Users/" +
+                        userId +
+                        "/Lock";
 
-                setLockedFunc(userId, value);
-            });
-
-            $(document).on("click", ".shareBTN", function () {
-                let userId = this.getAttribute("data-userid");
-                let value = (this.getAttribute("data-value") == "true");
-
-                setCanShareFunc(userId, value);
-            });
+                    ajaxCall("PUT", api, request,
+                        changeLockSuccess, adminError);
+                });
         }
 
-        function setLockedFunc(userId, isLocked) {
-            let request = { isLocked: isLocked };
-            ajaxCall("PUT", adminApi + "/Lock/" + userId, request,
-                loadUsersFunc, error);
-        }
-        function setCanShareFunc(userId, canShare) {
-            let request = { canShare: canShare };
-
-            ajaxCall("PUT", adminApi + "/CanShare/" + userId, request,
-                loadUsersFunc, error);
+        function changeLockSuccess(result) {
+            swal("Saved", "The login permission was updated", "success");
+            loadUsersFunc();
+            loadStatisticsFunc();
         }
 
+        function changeSharePermissionFunc(userId, newValue) {
+            let actionText = newValue
+                ? "allow this user to share"
+                : "block this user from sharing";
 
-        // Import countries from the API
+            swal({
+                title: "Change sharing permission?",
+                text: "Do you want to " + actionText + "?",
+                icon: "warning",
+                buttons: true
+            })
+                .then(function (confirmed) {
+                    if (!confirmed) {
+                        return;
+                    }
 
-        function importCountriesFunc() {
-            $("#importBTN").prop("disabled", true);
-            $("#importBTN").val("Importing, please wait...");
+                    let request = {
+                        value: newValue
+                    };
 
-            ajaxCall("POST", countriesApi + "/Import", null,
-                importSuccess, importError);
+                    let api = adminApi + "/" +
+                        admin.userId +
+                        "/Users/" +
+                        userId +
+                        "/Share";
+
+                    ajaxCall("PUT", api, request,
+                        changeShareSuccess, adminError);
+                });
         }
 
-        function importSuccess(result) {
-            $("#importBTN").prop("disabled", false);
-            $("#importBTN").val("Import countries");
-
-            swal("Done", "The import finished successfully", "success");
-
-            loadStatsFunc();
+        function changeShareSuccess(result) {
+            swal("Saved", "The sharing permission was updated", "success");
+            loadUsersFunc();
+            loadStatisticsFunc();
         }
 
-        function importError(err) {
-            $("#importBTN").prop("disabled", false);
-            $("#importBTN").val("Import countries");
+        // =====================================================
+        // Shares moderation
+        // =====================================================
+
+        function loadSharesFunc() {
+            ajaxCall("GET", sharesApi, null,
+                loadSharesSuccess, adminError);
+        }
+
+        function loadSharesSuccess(shares) {
+            if (shares.length == 0) {
+                $("#sharesPH").html("<p>There are no shares.</p>");
+                return;
+            }
+
+            let str = "";
+
+            for (let i = 0; i < shares.length; i++) {
+                let share = shares[i];
+
+                str += `
+                            <div class="share-card">
+                                <div class="share-head">
+                                    <div>
+                                        <strong>${safeText(share.userName)}</strong>
+                                        shared about
+                                        <a href="country.html?id=${share.countryId}">
+                                            ${safeText(share.countryName)}
+                                        </a>
+                                    </div>
+
+                                    <span>
+                                        ${formatAdminDate(share.createdAt)}
+                                    </span>
+                                </div>
+
+                                <p>${safeText(share.content)}</p>
+
+                                <button class="delete-btn"
+                                        onclick="deleteShareAdminFunc(
+                                            ${share.shareId}
+                                        )">
+                                    Delete share
+                                </button>
+                            </div>
+                        `;
+            }
+
+            $("#sharesPH").html(str);
+        }
+
+        function deleteShareAdminFunc(shareId) {
+            swal({
+                title: "Delete this share?",
+                text: "The administrator will permanently remove this content.",
+                icon: "warning",
+                buttons: true,
+                dangerMode: true
+            })
+                .then(function (confirmed) {
+                    if (!confirmed) {
+                        return;
+                    }
+
+                    let api = adminApi + "/" +
+                        admin.userId +
+                        "/Shares/" +
+                        shareId;
+
+                    ajaxCall("DELETE", api, null,
+                        deleteShareAdminSuccess, adminError);
+                });
+        }
+
+        function deleteShareAdminSuccess(result) {
+            swal("Deleted", "The share was removed", "success");
+
+            loadSharesFunc();
+            loadStatisticsFunc();
+        }
+
+        // =====================================================
+        // Helpers
+        // =====================================================
+
+        function formatAdminDate(dateValue) {
+            if (dateValue == null || dateValue == "") {
+                return "";
+            }
+
+            return new Date(dateValue).toLocaleString();
+        }
+
+        function adminError(err) {
+            console.log(err);
+
+            if (err != null && err.status == 403) {
+                swal(
+                    "Forbidden",
+                    "Administrator permission is required",
+                    "error"
+                );
+
+                window.location.href = "index.html";
+                return;
+            }
 
             error(err);
         }
-</script>
+    </script>
+
+    <style>
+        .statistics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+            gap: 12px;
+        }
+
+        .stat-card {
+            background-color: white;
+            border: 1px solid #d9e1ec;
+            border-radius: 8px;
+            padding: 18px;
+            text-align: center;
+        }
+
+        .stat-number {
+            display: block;
+            margin-top: 8px;
+            font-size: 28px;
+            font-weight: bold;
+            color: #1f4e79;
+        }
+
+        .admin-table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: white;
+        }
+
+            .admin-table th,
+            .admin-table td {
+                padding: 10px;
+                border-bottom: 1px solid #d9e1ec;
+                text-align: left;
+                vertical-align: middle;
+            }
+
+            .admin-table th {
+                background-color: #eaf0f8;
+                color: #1f4e79;
+            }
+
+        .action-cell {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .status-good {
+            color: green;
+            font-weight: bold;
+        }
+
+        .status-bad {
+            color: #c0392b;
+            font-weight: bold;
+        }
+
+        .admin-section {
+            margin-top: 25px;
+        }
+
+        #lastRefreshPH {
+            color: #666;
+            font-size: 14px;
+        }
+
+        @media screen and (max-width: 900px) {
+            .admin-table {
+                display: block;
+                overflow-x: auto;
+            }
+        }
+    </style>
 </head>
+
 <body>
     <div class="page">
         <div id="menuPH"></div>
 
         <h1>Administration</h1>
 
-        <!-- ---------- statistics ---------- -->
-        <div class="stats-row" id="statsPH"></div>
-        <p id="updatedPH" class="share-head"></p>
+        <div class="controls">
+            <input type="button"
+                   id="refreshBTN"
+                   value="Refresh administration data" />
 
-        <!-- ---------- import ---------- -->
-        <div class="card-box">
-            <h2>Import countries</h2>
-            <p>
-                Pulls the country data on the server side and saves it
-                into the database.
-            </p>
-            <input type="button" id="importBTN" value="Import countries" />
+            <span id="lastRefreshPH"></span>
         </div>
 
-        <!-- ---------- users ---------- -->
-        <div class="card-box">
-            <h2>Users</h2>
+        <section class="admin-section">
+            <h2>System statistics</h2>
 
-            <input type="button" id="refreshBTN" value="Refresh" />
+            <div class="statistics-grid">
+                <div class="stat-card">
+                    Registered users
+                    <span class="stat-number" id="usersCountPH">0</span>
+                </div>
 
-            <table id="usersTable" class="display" style="width:100%">
-                <thead>
-                    <tr>
-                        <th>Id</th>
-                        <th>Name</th>
-                        <th>Email</th>
-                        <th>Role</th>
-                        <th>Status</th>
-                        <th>Sharing</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-            </table>
-        </div>
+                <div class="stat-card">
+                    Locked users
+                    <span class="stat-number" id="lockedUsersCountPH">0</span>
+                </div>
+
+                <div class="stat-card">
+                    Sharing blocked
+                    <span class="stat-number" id="blockedSharingCountPH">0</span>
+                </div>
+
+                <div class="stat-card">
+                    Countries
+                    <span class="stat-number" id="countriesCountPH">0</span>
+                </div>
+
+                <div class="stat-card">
+                    Shares
+                    <span class="stat-number" id="sharesCountPH">0</span>
+                </div>
+
+                <div class="stat-card">
+                    Saved countries
+                    <span class="stat-number" id="savedCountriesCountPH">0</span>
+                </div>
+
+                <div class="stat-card">
+                    Completed quizzes
+                    <span class="stat-number" id="quizAttemptsCountPH">0</span>
+                </div>
+            </div>
+        </section>
+
+        <section class="admin-section">
+            <h2>User management</h2>
+            <div id="usersPH"></div>
+        </section>
+
+        <section class="admin-section">
+            <h2>Shares moderation</h2>
+            <div id="sharesPH"></div>
+        </section>
     </div>
 </body>
 </html>

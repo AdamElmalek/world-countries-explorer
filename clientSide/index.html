@@ -13,6 +13,7 @@
     <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
     <script src="ajaxCalls.js"></script>
     <script src="common.js"></script>
+
     <script>
         let countries = [];
         let tbl = null;
@@ -35,8 +36,10 @@
             loadCountriesFunc();
         });
 
-
+        // =====================================================
         // Filter options for the dropdowns
+        // =====================================================
+
         function loadFilterOptionsFunc() {
             ajaxCall("GET", countriesApi + "/FilterOptions", null,
                 loadFilterOptionsSuccess, filterOptionsError);
@@ -91,21 +94,21 @@
                 let country = countriesData[i];
 
                 str += `
-                    <div class="country-card">
-                        <img src="${safeText(country.flagUrl)}" alt="Flag of ${safeText(country.name)}" />
+                        <div class="country-card">
+                            <img src="${safeText(country.flagUrl)}" alt="Flag of ${safeText(country.name)}" />
 
-                        <div class="card-body">
-                            <h3>${safeText(country.name)}</h3>
-                            <p>Capital: ${safeText(country.capital)}</p>
-                            <p>Region: ${safeText(country.region)}</p>
-                            <p>Population: ${formatNumber(country.population)}</p>
+                            <div class="card-body">
+                                <h3>${safeText(country.name)}</h3>
+                                <p>Capital: ${safeText(country.capital)}</p>
+                                <p>Region: ${safeText(country.region)}</p>
+                                <p>Population: ${formatNumber(country.population)}</p>
 
-                            <button onclick="openCountryFunc(${country.countryId})">
-                                View details
-                            </button>
+                                <button onclick="openCountryFunc(${country.countryId})">
+                                    View details
+                                </button>
+                            </div>
                         </div>
-                    </div>
-                `;
+                    `;
             }
 
             $("#cardsPH").html(str);
@@ -115,7 +118,10 @@
             window.location.href = "country.html?id=" + countryId;
         }
 
+        // =====================================================
         // Table view (DataTables)
+        // =====================================================
+
         function buildDataTable(countriesData) {
             if (tbl != null) {
                 tbl.destroy();
@@ -180,8 +186,9 @@
 
             loadCountriesFunc();
         }
-        </script>
-</head >
+    </script>
+</head>
+
 <body>
     <div class="page">
         <div id="menuPH"></div>
@@ -232,4 +239,4 @@
         </div>
     </div>
 </body>
-</html >
+</html>

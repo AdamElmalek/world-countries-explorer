@@ -19,20 +19,19 @@
             buildMenu("countries");
 
             user = getLoggedUser();
-            countryId = getQueryParam("id");
+            countryId = Number(getQueryParam("id"));
 
-            if (countryId == null) {
+            if (countryId <= 0) {
                 $("#detailsPH").html("<h3>No country was chosen</h3>");
                 return;
             }
 
             $("#addShareBTN").click(addShareFunc);
+
             $("#backBTN").click(function () {
                 window.location.href = "index.html";
             });
 
-
-            // the share form is only shown to a logged-in user
             if (isLoggedIn()) {
                 $("#shareFormDiv").show();
                 $("#loginHintPH").hide();
@@ -46,86 +45,195 @@
             loadSharesFunc();
         });
 
-
+        // =====================================================
         // Country details
+        // =====================================================
+
         function loadCountryFunc() {
-            ajaxCall("GET", countriesApi + "/" + countryId, null,
-                loadCountrySuccess, error);
+            ajaxCall("GET", countriesApi + "/" + countryId, null, loadCountrySuccess, error);
         }
 
         function loadCountrySuccess(country) {
-            let buttons = "";
-
-            if (isLoggedIn()) {
-                buttons = `
-                        <button class="green-btn" onclick="addToListFunc('Visited')">
-                            I visited
-                        </button>
-                        <button onclick="addToListFunc('WantToVisit')">
-                            Want to visit
-                        </button>
-                    `;
-            }
-
             let str = `
-                    <div class="card-box">
-                        <div class="country-details">
-                            <img src="${safeText(country.flagUrl)}" width="260"
-                                 alt="Flag of ${safeText(country.name)}" />
+                        <div class="card-box">
+                            <div class="country-details">
+                                <img src="${safeText(country.flagUrl)}" width="260"
+                                     alt="Flag of ${safeText(country.name)}" />
 
-                            <div>
-                                <h1>${safeText(country.name)}</h1>
+                                <div class="country-information">
+                                    <h1>${safeText(country.name)}</h1>
 
-                                <table class="details-table">
-                                    <tr><td>Capital</td><td>${safeText(country.capital)}</td></tr>
-                                    <tr><td>Region</td><td>${safeText(country.region)}</td></tr>
-                                    <tr><td>Languages</td><td>${safeText(country.languages)}</td></tr>
-                                    <tr><td>Currencies</td><td>${safeText(country.currencies)}</td></tr>
-                                    <tr><td>Population</td><td>${formatNumber(country.population)}</td></tr>
-                                    <tr><td>Area</td><td>${formatNumber(country.area)} km²</td></tr>
-                                </table>
+                                    <table class="details-table">
+                                        <tr><td>Capital</td><td>${safeText(country.capital)}</td></tr>
+                                        <tr><td>Region</td><td>${safeText(country.region)}</td></tr>
+                                        <tr><td>Languages</td><td>${getCountryLanguages(country)}</td></tr>
+                                        <tr><td>Currencies</td><td>${getCountryCurrencies(country)}</td></tr>
+                                        <tr><td>Population</td><td>${formatNumber(country.population)}</td></tr>
+                                        <tr><td>Area</td><td>${formatNumber(country.area)} km²</td></tr>
+                                    </table>
 
-                                ${buttons}
+                                    <div id="listActionsPH"></div>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                `;
+                    `;
 
             $("#detailsPH").html(str);
+
+            if (user == null) {
+                $("#listActionsPH").html("<a href='Login.html'>Log in</a> to save this country.");
+            }
+            else {
+                loadCountryListStatus();
+            }
         }
 
+        function getCountryLanguages(country) {
+            if (country.languages != null && country.languages != "") {
+                return safeText(country.languages);
+            }
 
+            if (country.languageList == null || country.languageList.length == 0) {
+                return "No information";
+            }
+
+            let names = [];
+
+            for (let i = 0; i < country.languageList.length; i++) {
+                names.push(safeText(country.languageList[i].languageName));
+            }
+
+            return names.join(", ");
+        }
+
+        function getCountryCurrencies(country) {
+            if (country.currencies != null && country.currencies != "") {
+                return safeText(country.currencies);
+            }
+
+            if (country.currencyList == null || country.currencyList.length == 0) {
+                return "No information";
+            }
+
+            let names = [];
+
+            for (let i = 0; i < country.currencyList.length; i++) {
+                names.push(safeText(country.currencyList[i].currencyCode));
+            }
+
+            return names.join(", ");
+        }
+
+        // =====================================================
         // Personal lists
+        // =====================================================
+
+        function loadCountryListStatus() {
+            let api = listsApi + "/" + user.userId + "/" + countryId + "/Status";
+            ajaxCall("GET", api, null, loadStatusSuccess, loadStatusError);
+        }
+
+        function loadStatusSuccess(status) {
+            renderListButtons(status.listType);
+        }
+
+        function loadStatusError(err) {
+            if (err.status == 404) {
+                renderListButtons("");
+                return;
+            }
+
+            error(err);
+        }
+
+        function renderListButtons(listType) {
+            let str = "";
+
+            if (listType == "") {
+                str += `<button class="green-btn" onclick="addToListFunc('Visited')">I visited</button>`;
+                str += `<button onclick="addToListFunc('WantToVisit')">Want to visit</button>`;
+            }
+            else if (listType == "Visited") {
+                str += `<span class="saved-status">Saved in: Visited</span>`;
+                str += `<button onclick="moveCountryFunc('WantToVisit')">Move to Want to visit</button>`;
+                str += `<button class="delete-btn" onclick="removeCountryFunc()">Remove</button>`;
+            }
+            else if (listType == "WantToVisit") {
+                str += `<span class="saved-status">Saved in: Want to visit</span>`;
+                str += `<button onclick="moveCountryFunc('Visited')">Move to Visited</button>`;
+                str += `<button class="delete-btn" onclick="removeCountryFunc()">Remove</button>`;
+            }
+
+            $("#listActionsPH").html(str);
+        }
+
         function addToListFunc(listType) {
             let request = {
                 userId: user.userId,
-                countryId: Number(countryId),
+                countryId: countryId,
                 listType: listType
             };
 
             ajaxCall("POST", listsApi, request, addToListSuccess, addToListError);
         }
 
-        function addToListSuccess(result) {
+        function addToListSuccess() {
             swal("Added", "The country was added to your list", "success");
+            loadCountryListStatus();
         }
 
         function addToListError(err) {
             console.log(err);
 
             if (err.status == 409) {
-                swal("Already there", "This country is already in that list", "warning");
+                swal("Already saved", "This country is already in one of your lists", "warning");
+                loadCountryListStatus();
             }
             else {
-                swal("Error", "Could not add the country", "error");
+                error(err);
             }
         }
 
+        function moveCountryFunc(toType) {
+            let request = {
+                listType: toType
+            };
 
+            let api = listsApi + "/" + user.userId + "/" + countryId;
+            ajaxCall("PUT", api, request, moveCountrySuccess, error);
+        }
+
+        function moveCountrySuccess() {
+            swal("Moved", "The country was moved to the other list", "success");
+            loadCountryListStatus();
+        }
+
+        function removeCountryFunc() {
+            swal({
+                title: "Remove this country?",
+                icon: "warning",
+                buttons: true,
+                dangerMode: true
+            })
+                .then(function (willRemove) {
+                    if (willRemove) {
+                        let api = listsApi + "/" + user.userId + "/" + countryId;
+                        ajaxCall("DELETE", api, null, removeCountrySuccess, error);
+                    }
+                });
+        }
+
+        function removeCountrySuccess() {
+            swal("Removed", "The country was removed from your list", "success");
+            loadCountryListStatus();
+        }
+
+        // =====================================================
         // Shares
+        // =====================================================
+
         function loadSharesFunc() {
-            ajaxCall("GET", sharesApi + "/ByCountry/" + countryId, null,
-                loadSharesSuccess, error);
+            ajaxCall("GET", sharesApi + "/ByCountry/" + countryId, null, loadSharesSuccess, loadSharesError);
         }
 
         function loadSharesSuccess(shares) {
@@ -138,33 +246,36 @@
 
             for (let i = 0; i < shares.length; i++) {
                 let share = shares[i];
-
-                // edit and delete only on your own shares
                 let myButtons = "";
 
                 if (isLoggedIn() && share.userId == user.userId) {
                     myButtons = `
-                            <button onclick="editShareFunc(${share.shareId})">Edit</button>
-                            <button class="delete-btn" onclick="deleteShareFunc(${share.shareId})">Delete</button>
-                        `;
+                                <button onclick="editShareFunc(${share.shareId})">Edit</button>
+                                <button class="delete-btn" onclick="deleteShareFunc(${share.shareId})">Delete</button>
+                            `;
                 }
 
                 str += `
-                        <div class="share-card">
-                            <div class="share-head">
-                                <strong>${safeText(share.userName)}</strong>
-                                <span>${safeText(share.createdAt)}</span>
+                            <div class="share-card">
+                                <div class="share-head">
+                                    <strong>${safeText(share.userName)}</strong>
+                                    <span>${safeText(share.createdAt)}</span>
+                                </div>
+
+                                <p id="shareText_${share.shareId}">${safeText(share.content)}</p>
+                                ${myButtons}
                             </div>
-
-                            <p id="shareText_${share.shareId}">${safeText(share.content)}</p>
-
-                            ${myButtons}
-                        </div>
-                    `;
+                        `;
             }
 
             $("#sharesPH").html(str);
         }
+
+        function loadSharesError(err) {
+            console.log(err);
+            $("#sharesPH").html("<p>The sharing feature will be connected later.</p>");
+        }
+
         function addShareFunc() {
             let content = $("#shareTB").val().trim();
 
@@ -175,14 +286,14 @@
 
             let request = {
                 userId: user.userId,
-                countryId: Number(countryId),
+                countryId: countryId,
                 content: content
             };
 
             ajaxCall("POST", sharesApi, request, addShareSuccess, addShareError);
         }
 
-        function addShareSuccess(result) {
+        function addShareSuccess() {
             $("#shareTB").val("");
             loadSharesFunc();
         }
@@ -190,7 +301,6 @@
         function addShareError(err) {
             console.log(err);
 
-            // 403 = the admin blocked this user from sharing
             if (err.status == 403) {
                 swal("Blocked", "The administrator blocked you from sharing content", "error");
             }
@@ -201,7 +311,6 @@
 
         function editShareFunc(shareId) {
             let currentText = $("#shareText_" + shareId).text();
-
             let newText = prompt("Edit your share:", currentText);
 
             if (newText == null || newText.trim() == "") {
@@ -225,13 +334,11 @@
             })
                 .then(function (willDelete) {
                     if (willDelete) {
-                        ajaxCall("DELETE",
-                            sharesApi + "/" + shareId + "?userId=" + user.userId,
-                            null, loadSharesFunc, error);
+                        let api = sharesApi + "/" + shareId + "?userId=" + user.userId;
+                        ajaxCall("DELETE", api, null, loadSharesFunc, error);
                     }
                 });
         }
-
     </script>
 
     <style>
@@ -240,6 +347,11 @@
             gap: 25px;
             flex-wrap: wrap;
             align-items: flex-start;
+        }
+
+        .country-information {
+            flex: 1;
+            min-width: 260px;
         }
 
         .details-table {
@@ -256,31 +368,45 @@
                     font-weight: bold;
                     color: #1f4e79;
                 }
+
+        #listActionsPH {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 15px;
+        }
+
+        .saved-status {
+            font-weight: bold;
+            color: #1f4e79;
+        }
     </style>
 </head>
-            <body>
-                <div class="page">
-                    <div id="menuPH"></div>
 
-                    <input type="button" id="backBTN" value="Back to countries" />
+<body>
+    <div class="page">
+        <div id="menuPH"></div>
 
-                    <div id="detailsPH"></div>
+        <input type="button" id="backBTN" value="Back to countries" />
 
-                    <h2>Shares about this country</h2>
+        <div id="detailsPH"></div>
 
-                    <div id="shareFormDiv" class="card-box">
-                        <textarea id="shareTB" rows="3" maxlength="1000"
-                                  placeholder="Share an experience, a recommendation or a short review..."
-                                  style="width:100%; padding:9px; border:1px solid #cfd8e3; border-radius:6px;"></textarea>
+        <h2>Shares about this country</h2>
 
-                        <input type="button" id="addShareBTN" value="Publish" />
-                    </div>
+        <div id="shareFormDiv" class="card-box">
+            <textarea id="shareTB" rows="3" maxlength="1000"
+                      placeholder="Share an experience, a recommendation or a short review..."
+                      style="width:100%; padding:9px; border:1px solid #cfd8e3; border-radius:6px;"></textarea>
 
-                    <p id="loginHintPH">
-                        <a href="Login.html">Log in</a> to share your experience about this country.
-                    </p>
+            <input type="button" id="addShareBTN" value="Publish" />
+        </div>
 
-                    <div id="sharesPH"></div>
-                </div>
-            </body>
-</html >
+        <p id="loginHintPH">
+            <a href="Login.html">Log in</a> to share your experience about this country.
+        </p>
+
+        <div id="sharesPH"></div>
+    </div>
+</body>
+</html>

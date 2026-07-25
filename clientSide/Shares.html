@@ -10,6 +10,7 @@
     <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
     <script src="ajaxCalls.js"></script>
     <script src="common.js"></script>
+
     <script>
         let user = null;
         let allShares = [];
@@ -35,8 +36,9 @@
             startPolling();
         });
 
-
+        // =====================================================
         // Polling
+        // =====================================================
 
         function startPolling() {
             if (pollingId != null) {
@@ -70,8 +72,9 @@
             stopPolling();
         });
 
-
+        // =====================================================
         // Load and show
+        // =====================================================
 
         function loadSharesFunc() {
             ajaxCall("GET", sharesApi, null, loadSharesSuccess, pollingError);
@@ -126,6 +129,7 @@
                 $("#countryDD").val(current);
             }
         }
+
         function renderShares() {
             let countryFilter = $("#countryDD").val();
             let textFilter = $("#textTB").val().trim();
@@ -159,36 +163,37 @@
 
                 if (isLoggedIn() && share.userId == user.userId) {
                     myButtons = `
-                        <button onclick="editShareFunc(${share.shareId})">Edit</button>
-                        <button class="delete-btn" onclick="deleteShareFunc(${share.shareId})">Delete</button>
-                    `;
+                            <button onclick="editShareFunc(${share.shareId})">Edit</button>
+                            <button class="delete-btn" onclick="deleteShareFunc(${share.shareId})">Delete</button>
+                        `;
                 }
 
                 str += `
-                    <div class="share-card">
-                        <div class="share-head">
-                            <span>
-                                <strong>${safeText(share.userName)}</strong>
-                                about
-                                <a href="country.html?id=${share.countryId}">
-                                    ${safeText(share.countryName)}
-                                </a>
-                            </span>
-                            <span>${safeText(share.createdAt)}</span>
+                        <div class="share-card">
+                            <div class="share-head">
+                                <span>
+                                    <strong>${safeText(share.userName)}</strong>
+                                    about
+                                    <a href="country.html?id=${share.countryId}">
+                                        ${safeText(share.countryName)}
+                                    </a>
+                                </span>
+                                <span>${safeText(share.createdAt)}</span>
+                            </div>
+
+                            <p id="shareText_${share.shareId}">${safeText(share.content)}</p>
+
+                            ${myButtons}
                         </div>
-
-                        <p id="shareText_${share.shareId}">${safeText(share.content)}</p>
-
-                        ${myButtons}
-                    </div>
-                `;
+                    `;
             }
 
             $("#feedPH").html(str);
         }
 
-
+        // =====================================================
         // Edit and delete
+        // =====================================================
 
         function editShareFunc(shareId) {
             let currentText = $("#shareText_" + shareId).text();
@@ -222,36 +227,33 @@
                     }
                 });
         }
+    </script>
+</head>
 
+<body>
+    <div class="page">
+        <div id="menuPH"></div>
 
+        <h1>All Shares</h1>
 
+        <div class="controls">
+            <select id="countryDD">
+                <option value="">All countries</option>
+            </select>
 
-</script>
-</head >
-            <body>
-                <div class="page">
-                    <div id="menuPH"></div>
+            <input id="textTB" type="text" placeholder="Search inside the text" />
 
-                    <h1>All Shares</h1>
+            <label>
+                <input type="checkbox" id="pollingCB" checked />
+                Live updates
+            </label>
+        </div>
 
-                    <div class="controls">
-                        <select id="countryDD">
-                            <option value="">All countries</option>
-                        </select>
+        <p id="pollingStatusPH" class="share-head"></p>
+        <p id="newSharesPH" class="success"></p>
+        <p id="countPH"></p>
 
-                        <input id="textTB" type="text" placeholder="Search inside the text" />
-
-                        <label>
-                            <input type="checkbox" id="pollingCB" checked />
-                            Live updates
-                        </label>
-                    </div>
-
-                    <p id="pollingStatusPH" class="share-head"></p>
-                    <p id="newSharesPH" class="success"></p>
-                    <p id="countPH"></p>
-
-                    <div id="feedPH"></div>
-                </div>
-            </body>
-</html >
+        <div id="feedPH"></div>
+    </div>
+</body>
+</html>

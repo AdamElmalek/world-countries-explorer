@@ -59,24 +59,24 @@
                 let quiz = quizzes[i];
 
                 str += `
-                        <div class="quiz-card">
-                            <h2>${safeText(quiz.title)}</h2>
+                                <div class="quiz-card">
+                                    <h2>${safeText(quiz.title)}</h2>
 
-                            <p>${safeText(quiz.description)}</p>
+                                    <p>${safeText(quiz.description)}</p>
 
-                            <div>
-                                Questions: ${quiz.questionsCount}
-                                |
-                                Maximum score: ${quiz.maximumScore}
-                                |
-                                Time: ${quiz.timeLimitSeconds} seconds
-                            </div>
+                                    <div>
+                                        Questions: ${quiz.questionsCount}
+                                        |
+                                        Maximum score: ${quiz.maximumScore}
+                                        |
+                                        Time: ${quiz.timeLimitSeconds} seconds
+                                    </div>
 
-                            <button onclick="startQuizFunc(${quiz.quizId})">
-                                Start quiz
-                            </button>
-                        </div>
-                    `;
+                                    <button onclick="startQuizFunc(${quiz.quizId})">
+                                        Start quiz
+                                    </button>
+                                </div>
+                            `;
             }
 
             $("#quizzesPH").html(str);
@@ -140,36 +140,36 @@
                 let question = questions[i];
 
                 str += `
-                        <div class="question-card">
-                            <h3>
-                                ${i + 1}. ${safeText(question.questionText)}
-                            </h3>
+                                <div class="question-card">
+                                    <h3>
+                                        ${i + 1}. ${safeText(question.questionText)}
+                                    </h3>
 
-                            ${createOption(
+                                    ${createOption(
                     question.questionId,
                     "A",
                     question.optionA
                 )}
 
-                            ${createOption(
+                                    ${createOption(
                     question.questionId,
                     "B",
                     question.optionB
                 )}
 
-                            ${createOption(
+                                    ${createOption(
                     question.questionId,
                     "C",
                     question.optionC
                 )}
 
-                            ${createOption(
+                                    ${createOption(
                     question.questionId,
                     "D",
                     question.optionD
                 )}
-                        </div>
-                    `;
+                                </div>
+                            `;
             }
 
             $("#questionsPH").html(str);
@@ -184,15 +184,15 @@
 
         function createOption(questionId, optionLetter, optionText) {
             return `
-                    <label class="answer-option">
-                        <input type="radio"
-                               name="question_${questionId}"
-                               value="${optionLetter}" />
+                            <label class="answer-option">
+                                <input type="radio"
+                                       name="question_${questionId}"
+                                       value="${optionLetter}" />
 
-                        <strong>${optionLetter}.</strong>
-                        ${safeText(optionText)}
-                    </label>
-                `;
+                                <strong>${optionLetter}.</strong>
+                                ${safeText(optionText)}
+                            </label>
+                        `;
         }
 
 
@@ -316,35 +316,35 @@
 
             if (result.timeExpired) {
                 message = `
-                        <h2>Time expired</h2>
-                        <p>Your quiz was submitted after the time limit.</p>
-                    `;
+                                <h2>Time expired</h2>
+                                <p>Your quiz was submitted after the time limit.</p>
+                            `;
             }
             else {
                 message = `
-                        <h2>Quiz completed</h2>
+                                <h2>Quiz completed</h2>
 
-                        <p>
-                            Correct answers:
-                            <strong>
-                                ${result.correctAnswers} /
-                                ${result.totalQuestions}
-                            </strong>
-                        </p>
+                                <p>
+                                    Correct answers:
+                                    <strong>
+                                        ${result.correctAnswers} /
+                                        ${result.totalQuestions}
+                                    </strong>
+                                </p>
 
-                        <p>
-                            Score:
-                            <strong>${result.score}</strong>
-                        </p>
-                    `;
+                                <p>
+                                    Score:
+                                    <strong>${result.score}</strong>
+                                </p>
+                            `;
             }
 
             message += `
-                    <p>
-                        Your total quiz points:
-                        <strong>${result.totalPoints}</strong>
-                    </p>
-                `;
+                            <p>
+                                Your total quiz points:
+                                <strong>${result.totalPoints}</strong>
+                            </p>
+                        `;
 
             $("#resultPH").html(message);
 
@@ -392,17 +392,17 @@
             }
 
             let str = `
-                    <table class="attempts-table">
-                        <thead>
-                            <tr>
-                                <th>Quiz</th>
-                                <th>Score</th>
-                                <th>Correct answers</th>
-                                <th>Date</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                `;
+                            <table class="attempts-table">
+                                <thead>
+                                    <tr>
+                                        <th>Quiz</th>
+                                        <th>Score</th>
+                                        <th>Correct answers</th>
+                                        <th>Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                        `;
 
             for (let i = 0; i < attempts.length; i++) {
                 let attempt = attempts[i];
@@ -416,16 +416,16 @@
                 }
 
                 str += `
-                        <tr>
-                            <td>${safeText(attempt.title)}</td>
-                            <td>${attempt.score}</td>
-                            <td>
-                                ${attempt.correctAnswers} /
-                                ${attempt.totalQuestions}
-                            </td>
-                            <td>${safeText(dateText)}</td>
-                        </tr>
-                    `;
+                                <tr>
+                                    <td>${safeText(attempt.title)}</td>
+                                    <td>${attempt.score}</td>
+                                    <td>
+                                        ${attempt.correctAnswers} /
+                                        ${attempt.totalQuestions}
+                                    </td>
+                                    <td>${safeText(dateText)}</td>
+                                </tr>
+                            `;
             }
 
             str += "</tbody></table>";

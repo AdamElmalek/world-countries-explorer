@@ -13,6 +13,7 @@
 
     <script>
         let user = null;
+        let currentTab = "Visited";
 
         $(document).ready(function () {
             if (!requireLogin()) {
@@ -20,7 +21,6 @@
             }
 
             user = getLoggedUser();
-
             buildMenu("lists");
 
             $("#visitedTabBTN").click(function () {
@@ -31,100 +31,120 @@
                 showTab("WantToVisit");
             });
 
-            loadListFunc("Visited");
-            loadListFunc("WantToVisit");
-
+            reloadBothLists();
             showTab("Visited");
         });
 
         function showTab(listType) {
+            currentTab = listType;
+
             if (listType == "Visited") {
                 $("#visitedPH").show();
                 $("#wantPH").hide();
+                $("#visitedTabBTN").addClass("active-tab");
+                $("#wantTabBTN").removeClass("active-tab");
             }
             else {
                 $("#visitedPH").hide();
                 $("#wantPH").show();
+                $("#visitedTabBTN").removeClass("active-tab");
+                $("#wantTabBTN").addClass("active-tab");
             }
         }
 
-        // Load a list
+        // =====================================================
+        // Load lists
+        // =====================================================
 
         function loadListFunc(listType) {
-            ajaxCall("GET",
-                listsApi + "/" + listType + "?userId=" + user.userId,
-                null,
-                function (countries) {
-                    renderList(countries, listType);
-                },
-                error);
+            let api = listsApi + "/" + user.userId + "/" + listType;
+
+            ajaxCall("GET", api, null, function (items) {
+                renderList(items, listType);
+            }, error);
         }
 
-        function renderList(countries, listType) {
-            let placeHolder = (listType == "Visited") ? "#visitedPH" : "#wantPH";
-            let countPH = (listType == "Visited") ? "#visitedCountPH" : "#wantCountPH";
+        function renderList(items, listType) {
+            let placeHolder = listType == "Visited" ? "#visitedPH" : "#wantPH";
+            let countPH = listType == "Visited" ? "#visitedCountPH" : "#wantCountPH";
 
-            $(countPH).html("(" + countries.length + ")");
+            $(countPH).html("(" + items.length + ")");
 
-            if (countries.length == 0) {
+            if (items.length == 0) {
                 $(placeHolder).html("<p>This list is empty. Add countries from the country page.</p>");
                 return;
             }
 
-            // the other list, used by the move button
-            let otherType = (listType == "Visited") ? "WantToVisit" : "Visited";
-            let otherLabel = (listType == "Visited") ? "Move to Want to visit" : "Move to Visited";
-
+            let otherType = listType == "Visited" ? "WantToVisit" : "Visited";
+            let otherLabel = listType == "Visited" ? "Move to Want to visit" : "Move to Visited";
             let str = "";
 
-            for (let i = 0; i < countries.length; i++) {
-                let country = countries[i];
+            for (let i = 0; i < items.length; i++) {
+                let item = items[i];
+                let country = item.country;
 
                 str += `
-                        <div class="share-card">
-                            <div class="list-row">
-                                <img src="${safeText(country.flagUrl)}" width="60" />
+                            <div class="share-card">
+                                <div class="list-row">
+                                    <img src="${safeText(country.flagUrl)}"
+                                         alt="Flag of ${safeText(country.name)}" width="70" />
 
-                                <div class="list-info">
-                                    <a href="country.html?id=${country.countryId}">
-                                        <strong>${safeText(country.name)}</strong>
-                                    </a>
-                                    <div class="share-head">
-                                        ${safeText(country.capital)} - ${safeText(country.region)}
+                                    <div class="list-info">
+                                        <a href="country.html?id=${country.countryId}">
+                                            <strong>${safeText(country.name)}</strong>
+                                        </a>
+
+                                        <div class="country-small-info">
+                                            ${safeText(country.capital)} - ${safeText(country.region)}
+                                        </div>
+
+                                        <div class="saved-date">
+                                            Saved: ${formatSavedDate(item.savedAt)}
+                                        </div>
                                     </div>
+
+                                    <button onclick="moveCountryFunc(${country.countryId}, '${otherType}')">
+                                        ${otherLabel}
+                                    </button>
+
+                                    <button class="delete-btn" onclick="removeCountryFunc(${country.countryId})">
+                                        Remove
+                                    </button>
                                 </div>
-
-                                <button onclick="moveCountryFunc(${country.countryId}, '${listType}', '${otherType}')">
-                                    ${otherLabel}
-                                </button>
-
-                                <button class="delete-btn"
-                                        onclick="removeCountryFunc(${country.countryId}, '${listType}')">
-                                    Remove
-                                </button>
                             </div>
-                        </div>
-                    `;
+                        `;
             }
 
             $(placeHolder).html(str);
         }
 
+        function formatSavedDate(savedAt) {
+            if (savedAt == null || savedAt == "") {
+                return "";
+            }
 
-        // Move and remove
-
-        function moveCountryFunc(countryId, fromType, toType) {
-            let request = {
-                userId: user.userId,
-                countryId: countryId,
-                fromType: fromType,
-                toType: toType
-            };
-
-            ajaxCall("PUT", listsApi + "/Move", request, reloadBothLists, error);
+            return new Date(savedAt).toLocaleDateString();
         }
 
-        function removeCountryFunc(countryId, listType) {
+        // =====================================================
+        // Move and remove
+        // =====================================================
+
+        function moveCountryFunc(countryId, toType) {
+            let request = {
+                listType: toType
+            };
+
+            let api = listsApi + "/" + user.userId + "/" + countryId;
+            ajaxCall("PUT", api, request, moveCountrySuccess, error);
+        }
+
+        function moveCountrySuccess() {
+            swal("Moved", "The country was moved to the other list", "success");
+            reloadBothLists();
+        }
+
+        function removeCountryFunc(countryId) {
             swal({
                 title: "Remove this country?",
                 icon: "warning",
@@ -133,20 +153,22 @@
             })
                 .then(function (willRemove) {
                     if (willRemove) {
-                        ajaxCall("DELETE",
-                            listsApi + "?userId=" + user.userId +
-                            "&countryId=" + countryId +
-                            "&listType=" + listType,
-                            null, reloadBothLists, error);
+                        let api = listsApi + "/" + user.userId + "/" + countryId;
+                        ajaxCall("DELETE", api, null, removeCountrySuccess, error);
                     }
                 });
         }
 
-        function reloadBothLists(result) {
-            loadListFunc("Visited");
-            loadListFunc("WantToVisit");
+        function removeCountrySuccess() {
+            swal("Removed", "The country was removed from your list", "success");
+            reloadBothLists();
         }
 
+        function reloadBothLists() {
+            loadListFunc("Visited");
+            loadListFunc("WantToVisit");
+            showTab(currentTab);
+        }
     </script>
 
     <style>
@@ -157,16 +179,42 @@
             flex-wrap: wrap;
         }
 
+            .list-row img {
+                max-height: 50px;
+                object-fit: cover;
+                border: 1px solid #ddd;
+            }
+
         .list-info {
             flex-grow: 1;
+            min-width: 180px;
+        }
+
+        .country-small-info {
+            margin-top: 5px;
+            color: #555;
+        }
+
+        .saved-date {
+            margin-top: 4px;
+            font-size: 13px;
+            color: #777;
         }
 
         .tab-buttons {
+            display: flex;
+            align-items: center;
+            gap: 8px;
             margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .active-tab {
+            font-weight: bold;
+            border: 2px solid #1f4e79;
         }
     </style>
 </head>
-
 
 <body>
     <div class="page">

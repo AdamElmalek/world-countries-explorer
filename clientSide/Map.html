@@ -100,10 +100,10 @@
 
             for (let i = 0; i < regions.length; i++) {
                 str += `
-                        <option value="${safeText(regions[i])}">
-                            ${safeText(regions[i])}
-                        </option>
-                    `;
+                            <option value="${safeText(regions[i])}">
+                                ${safeText(regions[i])}
+                            </option>
+                        `;
             }
 
             $("#regionDD").html(str);
@@ -178,33 +178,33 @@
             }
 
             let popup = `
-                    <div class="country-popup">
-                        <img src="${safeText(flag)}"
-                             alt="Flag of ${safeText(country.name)}" />
+                        <div class="country-popup">
+                            <img src="${safeText(flag)}"
+                                 alt="Flag of ${safeText(country.name)}" />
 
-                        <h3>${safeText(country.name)}</h3>
+                            <h3>${safeText(country.name)}</h3>
 
-                        <p>
-                            <strong>Capital:</strong>
-                            ${safeText(country.capital)}
-                        </p>
+                            <p>
+                                <strong>Capital:</strong>
+                                ${safeText(country.capital)}
+                            </p>
 
-                        <p>
-                            <strong>Region:</strong>
-                            ${safeText(country.region)}
-                        </p>
+                            <p>
+                                <strong>Region:</strong>
+                                ${safeText(country.region)}
+                            </p>
 
-                        <p>
-                            <strong>Population:</strong>
-                            ${formatNumber(country.population)}
-                        </p>
+                            <p>
+                                <strong>Population:</strong>
+                                ${formatNumber(country.population)}
+                            </p>
 
-                        <a class="map-details-link"
-                           href="country.html?id=${country.countryId}">
-                            View details
-                        </a>
-                    </div>
-                `;
+                            <a class="map-details-link"
+                               href="country.html?id=${country.countryId}">
+                                View details
+                            </a>
+                        </div>
+                    `;
 
             marker.bindPopup(popup);
 

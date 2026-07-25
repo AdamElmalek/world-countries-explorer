@@ -1,7 +1,4 @@
-﻿// common.js
-// Shared settings and helpers for every page.
-
-// CHANGE THIS to your own address on the Ruppin server
+﻿
 const SERVER = "https://proj.ruppin.ac.il/cgroup137/test2/tar1";
 
 const usersApi = SERVER + "/api/Users";
@@ -12,7 +9,7 @@ const quizApi = SERVER + "/api/Quiz";
 const adminApi = SERVER + "/api/Admin";
 
 
-// Logged user (kept in localStorage, like in HW4)
+
 function getLoggedUser() {
     let userStr = localStorage.getItem("user");
 
@@ -41,7 +38,6 @@ function isAdmin() {
     let user = getLoggedUser();
     return user != null && user.role == "Admin";
 }
-
 
 // Sends the visitor to Login.html when the page requires a user
 function requireLogin() {
@@ -78,7 +74,6 @@ function logoutSuccess() {
 }
 
 
-// Top menu — every page calls buildMenu("pageKey")
 function buildMenu(activePage) {
     let user = getLoggedUser();
 
@@ -127,8 +122,9 @@ function buildMenu(activePage) {
     $("#menuPH").html(str);
 }
 
-
+// ---------------------------------------------------------
 // Small helpers
+// ---------------------------------------------------------
 
 // Numbers with thousands separators
 function formatNumber(num) {

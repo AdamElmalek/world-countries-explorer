@@ -10,6 +10,7 @@
     <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
     <script src="ajaxCalls.js"></script>
     <script src="common.js"></script>
+
     <script>
         $(document).ready(function () {
             $("#registerForm").submit(registerFunc);
@@ -54,6 +55,7 @@
 
             return false;
         }
+
         function registerSuccess(newUserId) {
             swal("Registered", "Your account was created. Please log in.", "success");
 
@@ -72,8 +74,8 @@
             }
         }
     </script>
+</head>
 
-</head >
 <body>
     <div class="page">
         <div id="menuPH"></div>
@@ -120,8 +122,9 @@
             </p>
         </div>
     </div>
+
     <script>
         buildMenu("");
     </script>
 </body>
-</html >
+</html>
