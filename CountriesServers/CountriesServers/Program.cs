@@ -16,7 +16,7 @@ namespace CountriesServers
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
-            if (app.Environment.IsDevelopment())
+            if (true)
             {
                 app.UseSwagger();
                 app.UseSwaggerUI();
