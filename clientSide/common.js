@@ -1,4 +1,4 @@
-﻿const SERVER = "https://localhost:7242";
+﻿const SERVER = "https://proj.ruppin.ac.il/cgroup37/test2/tar1";
 const usersApi = SERVER + "/api/Users";
 const countriesApi = SERVER + "/api/Countries";
 const listsApi = SERVER + "/api/Lists";
