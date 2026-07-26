@@ -1,0 +1,145 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>AI Country Advisor</title>
+
+    <link rel="stylesheet" href="style.css" />
+
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+    <script src="ajaxCalls.js"></script>
+    <script src="common.js"></script>
+
+    <script>let user = null;
+
+        $(document).ready(function () {
+            if (!requireLogin()) {
+                return;
+            }
+
+            user = getLoggedUser();
+            buildMenu("ai");
+
+            $("#askBTN").click(askAIFunc);
+            loadCountriesFunc();
+        });
+
+        function loadCountriesFunc() {
+            ajaxCall(
+                "GET",
+                countriesApi + "?sortBy=name&dir=asc",
+                null,
+                loadCountriesSuccess,
+                error
+            );
+        }
+
+        function loadCountriesSuccess(countries) {
+            let str = "<option value=''>Choose a country</option>";
+
+            for (let i = 0; i < countries.length; i++) {
+                str += `<option value="${countries[i].countryId}">${safeText(countries[i].name)}</option>`;
+            }
+
+            $("#countryDD").html(str);
+
+            let requestedCountryId = Number(getQueryParam("countryId"));
+            if (requestedCountryId > 0) {
+                $("#countryDD").val(requestedCountryId);
+            }
+        }
+
+        function askAIFunc() {
+            let countryId = Number($("#countryDD").val());
+            let question = $("#questionTB").val().trim();
+
+            if (countryId <= 0) {
+                swal("Choose a country", "Please choose a country first", "warning");
+                return;
+            }
+
+            if (question.length < 3) {
+                swal("Write a question", "Please write a complete question", "warning");
+                return;
+            }
+
+            let request = {
+                userId: user.userId,
+                countryId: countryId,
+                question: question
+            };
+
+            $("#askBTN").prop("disabled", true).val("Thinking...");
+            $("#answerPH").html("<div class='loading-box'>The AI advisor is preparing an answer...</div>");
+
+            ajaxCall("POST", aiApi + "/Ask", request, askAISuccess, askAIError);
+        }
+
+        function askAISuccess(response) {
+            $("#askBTN").prop("disabled", false).val("Ask AI Advisor");
+
+            let answerHtml = safeText(response.answer).replace(/\n/g, "<br />");
+
+            let str = `
+                <div class="card-box ai-answer-card">
+                    <h2>${safeText(response.countryName)}</h2>
+                    <p class="ai-question"><strong>Your question:</strong> ${safeText(response.question)}</p>
+                    <div class="ai-answer-text">${answerHtml}</div>
+                    <p class="ai-disclaimer">
+                        AI answers may contain mistakes. Verify current visa rules, travel warnings,
+                        prices, opening hours and other time-sensitive information.
+                    </p>
+                </div>`;
+
+            $("#answerPH").html(str);
+        }
+
+        function askAIError(err) {
+            $("#askBTN").prop("disabled", false).val("Ask AI Advisor");
+            $("#answerPH").empty();
+
+            if (err.status === 503) {
+                swal(
+                    "AI is not configured",
+                    err.responseText || "Add the AI API key to the server configuration",
+                    "warning"
+                );
+                return;
+            }
+
+            error(err);
+        }</script>
+</head>
+<body>
+    <div class="page">
+        <div id="menuPH"></div>
+
+        <h1>AI Country Advisor</h1>
+
+        <div class="card-box ai-advisor-intro">
+            <p>
+                Choose a country and ask for a travel plan, cultural overview,
+                geographic explanation or comparison. The server combines data
+                stored in SQL Server with an AI language model.
+            </p>
+        </div>
+
+        <div class="card-box">
+            <label for="countryDD"><strong>Country</strong></label>
+            <select id="countryDD">
+                <option value="">Loading countries...</option>
+            </select>
+
+            <label for="questionTB"><strong>Question</strong></label>
+            <textarea id="questionTB" rows="5" maxlength="500"
+                      placeholder="Example: Build a three-day cultural trip plan for this country."></textarea>
+
+            <input type="button" id="askBTN" value="Ask AI Advisor" />
+        </div>
+
+        <div id="answerPH"></div>
+    </div>
+</body>
+</html>

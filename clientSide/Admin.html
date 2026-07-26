@@ -65,6 +65,7 @@
             $("#quizAttemptsCountPH").text(
                 statistics.completedQuizAttemptsCount
             );
+            $("#loginsTodayPH").text(statistics.loginsToday);
 
             $("#lastRefreshPH").text(
                 "Last refresh: " + new Date().toLocaleTimeString()
@@ -89,20 +90,20 @@
             }
 
             let str = `
-                        <table class="admin-table">
-                            <thead>
-                                <tr>
-                                    <th>ID</th>
-                                    <th>Full name</th>
-                                    <th>Email</th>
-                                    <th>Role</th>
-                                    <th>Login status</th>
-                                    <th>Sharing status</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                    `;
+                            <table class="admin-table">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Full name</th>
+                                        <th>Email</th>
+                                        <th>Role</th>
+                                        <th>Login status</th>
+                                        <th>Sharing status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                        `;
 
             for (let i = 0; i < users.length; i++) {
                 let user = users[i];
@@ -127,56 +128,56 @@
                 }
                 else {
                     actionButtons = `
-                                <button onclick="changeLockFunc(
-                                    ${user.userId},
-                                    ${newLockValue}
-                                )">
-                                    ${lockButtonText}
-                                </button>
+                                    <button onclick="changeLockFunc(
+                                        ${user.userId},
+                                        ${newLockValue}
+                                    )">
+                                        ${lockButtonText}
+                                    </button>
 
-                                <button onclick="changeSharePermissionFunc(
-                                    ${user.userId},
-                                    ${newShareValue}
-                                )">
-                                    ${shareButtonText}
-                                </button>
-                            `;
+                                    <button onclick="changeSharePermissionFunc(
+                                        ${user.userId},
+                                        ${newShareValue}
+                                    )">
+                                        ${shareButtonText}
+                                    </button>
+                                `;
                 }
 
                 str += `
-                            <tr>
-                                <td>${user.userId}</td>
-                                <td>${safeText(user.fullName)}</td>
-                                <td>${safeText(user.email)}</td>
-                                <td>${safeText(user.role)}</td>
+                                <tr>
+                                    <td>${user.userId}</td>
+                                    <td>${safeText(user.fullName)}</td>
+                                    <td>${safeText(user.email)}</td>
+                                    <td>${safeText(user.role)}</td>
 
-                                <td>
-                                    <span class="${user.isLocked
+                                    <td>
+                                        <span class="${user.isLocked
                         ? "status-bad"
                         : "status-good"}">
-                                        ${lockedText}
-                                    </span>
-                                </td>
+                                            ${lockedText}
+                                        </span>
+                                    </td>
 
-                                <td>
-                                    <span class="${user.canShare
+                                    <td>
+                                        <span class="${user.canShare
                         ? "status-good"
                         : "status-bad"}">
-                                        ${sharingText}
-                                    </span>
-                                </td>
+                                            ${sharingText}
+                                        </span>
+                                    </td>
 
-                                <td class="action-cell">
-                                    ${actionButtons}
-                                </td>
-                            </tr>
-                        `;
+                                    <td class="action-cell">
+                                        ${actionButtons}
+                                    </td>
+                                </tr>
+                            `;
             }
 
             str += `
-                            </tbody>
-                        </table>
-                    `;
+                                </tbody>
+                            </table>
+                        `;
 
             $("#usersPH").html(str);
         }
@@ -275,31 +276,31 @@
                 let share = shares[i];
 
                 str += `
-                            <div class="share-card">
-                                <div class="share-head">
-                                    <div>
-                                        <strong>${safeText(share.userName)}</strong>
-                                        shared about
-                                        <a href="country.html?id=${share.countryId}">
-                                            ${safeText(share.countryName)}
-                                        </a>
+                                <div class="share-card">
+                                    <div class="share-head">
+                                        <div>
+                                            <strong>${safeText(share.userName)}</strong>
+                                            shared about
+                                            <a href="country.html?id=${share.countryId}">
+                                                ${safeText(share.countryName)}
+                                            </a>
+                                        </div>
+
+                                        <span>
+                                            ${formatAdminDate(share.createdAt)}
+                                        </span>
                                     </div>
 
-                                    <span>
-                                        ${formatAdminDate(share.createdAt)}
-                                    </span>
+                                    <p>${safeText(share.content)}</p>
+
+                                    <button class="delete-btn"
+                                            onclick="deleteShareAdminFunc(
+                                                ${share.shareId}
+                                            )">
+                                        Delete share
+                                    </button>
                                 </div>
-
-                                <p>${safeText(share.content)}</p>
-
-                                <button class="delete-btn"
-                                        onclick="deleteShareAdminFunc(
-                                            ${share.shareId}
-                                        )">
-                                    Delete share
-                                </button>
-                            </div>
-                        `;
+                            `;
             }
 
             $("#sharesPH").html(str);
@@ -492,6 +493,11 @@
                 <div class="stat-card">
                     Completed quizzes
                     <span class="stat-number" id="quizAttemptsCountPH">0</span>
+                </div>
+
+                <div class="stat-card">
+                    Logins today
+                    <span class="stat-number" id="loginsTodayPH">0</span>
                 </div>
             </div>
         </section>

@@ -2,6 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Country Details - World Countries</title>
 
     <link rel="stylesheet" href="style.css" />
@@ -14,6 +15,7 @@
     <script>
         let countryId = 0;
         let user = null;
+        let currentCountry = null;
 
         $(document).ready(function () {
             buildMenu("countries");
@@ -27,6 +29,8 @@
             }
 
             $("#addShareBTN").click(addShareFunc);
+            $("#saveCountryChangesBTN").click(updateCountryFunc);
+            $("#cancelCountryChangesBTN").click(closeEditCountryForm);
 
             $("#backBTN").click(function () {
                 window.location.href = "index.html";
@@ -41,42 +45,60 @@
                 $("#loginHintPH").show();
             }
 
+            $("#editCountryDiv").hide();
             loadCountryFunc();
             loadSharesFunc();
         });
-
-        // =====================================================
-        // Country details
-        // =====================================================
 
         function loadCountryFunc() {
             ajaxCall("GET", countriesApi + "/" + countryId, null, loadCountrySuccess, error);
         }
 
         function loadCountrySuccess(country) {
+            currentCountry = country;
+            let flag = country.flagUrl || country.flagPngUrl || "";
+            let adminButtons = "";
+            let aiButton = isLoggedIn()
+                ? `<button onclick="window.location.href='AIAdvisor.html?countryId=${countryId}'">Ask AI about this country</button>`
+                : "";
+
+            if (isAdmin()) {
+                adminButtons = `
+                        <div class="admin-country-buttons">
+                            <button onclick="openEditCountryForm()">Edit country</button>
+                            <button class="delete-btn" onclick="deleteCountryFunc()">Delete country</button>
+                        </div>`;
+            }
+
             let str = `
-                        <div class="card-box">
-                            <div class="country-details">
-                                <img src="${safeText(country.flagUrl)}" width="260"
-                                     alt="Flag of ${safeText(country.name)}" />
+                    <div class="card-box">
+                        <div class="country-details">
+                            <img src="${safeText(flag)}" width="260" alt="Flag of ${safeText(country.name)}" />
 
-                                <div class="country-information">
-                                    <h1>${safeText(country.name)}</h1>
+                            <div class="country-information">
+                                <h1>${safeText(country.flagEmoji)} ${safeText(country.name)}</h1>
 
-                                    <table class="details-table">
-                                        <tr><td>Capital</td><td>${safeText(country.capital)}</td></tr>
-                                        <tr><td>Region</td><td>${safeText(country.region)}</td></tr>
-                                        <tr><td>Languages</td><td>${getCountryLanguages(country)}</td></tr>
-                                        <tr><td>Currencies</td><td>${getCountryCurrencies(country)}</td></tr>
-                                        <tr><td>Population</td><td>${formatNumber(country.population)}</td></tr>
-                                        <tr><td>Area</td><td>${formatNumber(country.area)} km²</td></tr>
-                                    </table>
+                                <table class="details-table">
+                                    <tr><td>Native name</td><td>${safeText(country.nativeName)}</td></tr>
+                                    <tr><td>Codes</td><td>${safeText(country.alpha2Code)} / ${safeText(country.alpha3Code)} / ${safeText(country.numericCode)}</td></tr>
+                                    <tr><td>Capital</td><td>${safeText(country.capital)}</td></tr>
+                                    <tr><td>Region</td><td>${safeText(country.region)}</td></tr>
+                                    <tr><td>Subregion</td><td>${safeText(country.subregion)}</td></tr>
+                                    <tr><td>Languages</td><td>${getCountryLanguages(country)}</td></tr>
+                                    <tr><td>Currencies</td><td>${getCountryCurrencies(country)}</td></tr>
+                                    <tr><td>Population</td><td>${formatNumber(country.population)}</td></tr>
+                                    <tr><td>Area</td><td>${formatNumber(country.area)} km²</td></tr>
+                                    <tr><td>Population density</td><td>${formatNumber(country.populationDensity)}</td></tr>
+                                    <tr><td>Coordinates</td><td>${country.lat}, ${country.lng}</td></tr>
+                                    <tr><td>Demonym</td><td>${safeText(country.demonym)}</td></tr>
+                                </table>
 
-                                    <div id="listActionsPH"></div>
-                                </div>
+                                ${adminButtons}
+                                ${aiButton}
+                                <div id="listActionsPH"></div>
                             </div>
                         </div>
-                    `;
+                    </div>`;
 
             $("#detailsPH").html(str);
 
@@ -89,44 +111,140 @@
         }
 
         function getCountryLanguages(country) {
-            if (country.languages != null && country.languages != "") {
-                return safeText(country.languages);
+            if (country.languageList != null && country.languageList.length > 0) {
+                let names = [];
+                for (let i = 0; i < country.languageList.length; i++) {
+                    let item = country.languageList[i];
+                    names.push(safeText(item.languageName) + " (" + safeText(item.languageCode) + ")");
+                }
+                return names.join(", ");
             }
 
-            if (country.languageList == null || country.languageList.length == 0) {
-                return "No information";
-            }
-
-            let names = [];
-
-            for (let i = 0; i < country.languageList.length; i++) {
-                names.push(safeText(country.languageList[i].languageName));
-            }
-
-            return names.join(", ");
+            return country.languages ? safeText(country.languages) : "No information";
         }
 
         function getCountryCurrencies(country) {
-            if (country.currencies != null && country.currencies != "") {
-                return safeText(country.currencies);
+            if (country.currencyList != null && country.currencyList.length > 0) {
+                let names = [];
+                for (let i = 0; i < country.currencyList.length; i++) {
+                    let item = country.currencyList[i];
+                    names.push(safeText(item.currencyName) + " (" + safeText(item.currencyCode) + ")");
+                }
+                return names.join(", ");
             }
 
-            if (country.currencyList == null || country.currencyList.length == 0) {
-                return "No information";
-            }
-
-            let names = [];
-
-            for (let i = 0; i < country.currencyList.length; i++) {
-                names.push(safeText(country.currencyList[i].currencyCode));
-            }
-
-            return names.join(", ");
+            return country.currencies ? safeText(country.currencies) : "No information";
         }
 
-        // =====================================================
-        // Personal lists
-        // =====================================================
+        function openEditCountryForm() {
+            if (!isAdmin() || currentCountry == null) {
+                return;
+            }
+
+            $("#editNameTB").val(currentCountry.name);
+            $("#editNativeNameTB").val(currentCountry.nativeName);
+            $("#editAlpha2TB").val(currentCountry.alpha2Code);
+            $("#editAlpha3TB").val(currentCountry.alpha3Code);
+            $("#editNumericTB").val(currentCountry.numericCode);
+            $("#editCapitalTB").val(currentCountry.capital);
+            $("#editRegionTB").val(currentCountry.region);
+            $("#editSubregionTB").val(currentCountry.subregion);
+            $("#editPopulationTB").val(currentCountry.population);
+            $("#editAreaTB").val(currentCountry.area);
+            $("#editLatTB").val(currentCountry.lat);
+            $("#editLngTB").val(currentCountry.lng);
+            $("#editFlagUrlTB").val(currentCountry.flagUrl);
+            $("#editFlagPngTB").val(currentCountry.flagPngUrl);
+            $("#editFlagEmojiTB").val(currentCountry.flagEmoji);
+            $("#editDemonymTB").val(currentCountry.demonym);
+            $("#editDensityTB").val(currentCountry.populationDensity);
+            $("#editCountryDiv").slideDown();
+            window.scrollTo({ top: $("#editCountryDiv").offset().top - 20, behavior: "smooth" });
+        }
+
+        function closeEditCountryForm() {
+            $("#editCountryDiv").slideUp();
+        }
+
+        function editNumber(selector) {
+            let value = Number($(selector).val());
+            return Number.isFinite(value) ? value : 0;
+        }
+
+        function updateCountryFunc() {
+            if (!isAdmin() || currentCountry == null) {
+                return;
+            }
+
+            let area = editNumber("#editAreaTB");
+            let population = editNumber("#editPopulationTB");
+            let density = editNumber("#editDensityTB");
+
+            if (density === 0 && area > 0) {
+                density = population / area;
+            }
+
+            let request = {
+                countryId: countryId,
+                name: $("#editNameTB").val().trim(),
+                nativeName: $("#editNativeNameTB").val().trim(),
+                alpha2Code: $("#editAlpha2TB").val().trim().toUpperCase(),
+                alpha3Code: $("#editAlpha3TB").val().trim().toUpperCase(),
+                numericCode: $("#editNumericTB").val().trim(),
+                capital: $("#editCapitalTB").val().trim(),
+                region: $("#editRegionTB").val().trim(),
+                subregion: $("#editSubregionTB").val().trim(),
+                population: population,
+                area: area,
+                lat: editNumber("#editLatTB"),
+                lng: editNumber("#editLngTB"),
+                flagUrl: $("#editFlagUrlTB").val().trim(),
+                flagPngUrl: $("#editFlagPngTB").val().trim(),
+                flagEmoji: $("#editFlagEmojiTB").val().trim(),
+                demonym: $("#editDemonymTB").val().trim(),
+                populationDensity: density,
+                languages: currentCountry.languages || "",
+                currencies: currentCountry.currencies || "",
+                languageList: currentCountry.languageList || [],
+                currencyList: currentCountry.currencyList || []
+            };
+
+            if (request.name === "" || request.alpha2Code.length !== 2 || request.alpha3Code.length !== 3) {
+                swal("Invalid information", "Name, a two-letter code and a three-letter code are required", "warning");
+                return;
+            }
+
+            ajaxCall("PUT", countriesApi + "/" + countryId, request, updateCountrySuccess, error);
+        }
+
+        function updateCountrySuccess() {
+            swal("Updated", "The country was updated", "success");
+            closeEditCountryForm();
+            loadCountryFunc();
+        }
+
+        function deleteCountryFunc() {
+            if (!isAdmin()) {
+                return;
+            }
+
+            swal({
+                title: "Delete this country?",
+                text: "Related personal-list items and shares may also be deleted by the database relationships.",
+                icon: "warning",
+                buttons: true,
+                dangerMode: true
+            }).then(function (confirmed) {
+                if (confirmed) {
+                    ajaxCall("DELETE", countriesApi + "/" + countryId, null, deleteCountrySuccess, error);
+                }
+            });
+        }
+
+        function deleteCountrySuccess() {
+            swal("Deleted", "The country was deleted", "success")
+                .then(function () { window.location.href = "index.html"; });
+        }
 
         function loadCountryListStatus() {
             let api = listsApi + "/" + user.userId + "/" + countryId + "/Status";
@@ -142,7 +260,6 @@
                 renderListButtons("");
                 return;
             }
-
             error(err);
         }
 
@@ -168,12 +285,7 @@
         }
 
         function addToListFunc(listType) {
-            let request = {
-                userId: user.userId,
-                countryId: countryId,
-                listType: listType
-            };
-
+            let request = { userId: user.userId, countryId: countryId, listType: listType };
             ajaxCall("POST", listsApi, request, addToListSuccess, addToListError);
         }
 
@@ -183,8 +295,6 @@
         }
 
         function addToListError(err) {
-            console.log(err);
-
             if (err.status == 409) {
                 swal("Already saved", "This country is already in one of your lists", "warning");
                 loadCountryListStatus();
@@ -195,12 +305,8 @@
         }
 
         function moveCountryFunc(toType) {
-            let request = {
-                listType: toType
-            };
-
-            let api = listsApi + "/" + user.userId + "/" + countryId;
-            ajaxCall("PUT", api, request, moveCountrySuccess, error);
+            let request = { listType: toType };
+            ajaxCall("PUT", listsApi + "/" + user.userId + "/" + countryId, request, moveCountrySuccess, error);
         }
 
         function moveCountrySuccess() {
@@ -209,16 +315,10 @@
         }
 
         function removeCountryFunc() {
-            swal({
-                title: "Remove this country?",
-                icon: "warning",
-                buttons: true,
-                dangerMode: true
-            })
+            swal({ title: "Remove this country?", icon: "warning", buttons: true, dangerMode: true })
                 .then(function (willRemove) {
                     if (willRemove) {
-                        let api = listsApi + "/" + user.userId + "/" + countryId;
-                        ajaxCall("DELETE", api, null, removeCountrySuccess, error);
+                        ajaxCall("DELETE", listsApi + "/" + user.userId + "/" + countryId, null, removeCountrySuccess, error);
                     }
                 });
         }
@@ -227,10 +327,6 @@
             swal("Removed", "The country was removed from your list", "success");
             loadCountryListStatus();
         }
-
-        // =====================================================
-        // Shares
-        // =====================================================
 
         function loadSharesFunc() {
             ajaxCall("GET", sharesApi + "/ByCountry/" + countryId, null, loadSharesSuccess, loadSharesError);
@@ -243,53 +339,40 @@
             }
 
             let str = "";
-
             for (let i = 0; i < shares.length; i++) {
                 let share = shares[i];
                 let myButtons = "";
 
                 if (isLoggedIn() && share.userId == user.userId) {
-                    myButtons = `
-                                <button onclick="editShareFunc(${share.shareId})">Edit</button>
-                                <button class="delete-btn" onclick="deleteShareFunc(${share.shareId})">Delete</button>
-                            `;
+                    myButtons = `<button onclick="editShareFunc(${share.shareId})">Edit</button>
+                                     <button class="delete-btn" onclick="deleteShareFunc(${share.shareId})">Delete</button>`;
                 }
 
-                str += `
-                            <div class="share-card">
+                str += `<div class="share-card">
                                 <div class="share-head">
                                     <strong>${safeText(share.userName)}</strong>
                                     <span>${safeText(share.createdAt)}</span>
                                 </div>
-
                                 <p id="shareText_${share.shareId}">${safeText(share.content)}</p>
                                 ${myButtons}
-                            </div>
-                        `;
+                            </div>`;
             }
-
             $("#sharesPH").html(str);
         }
 
         function loadSharesError(err) {
             console.log(err);
-            $("#sharesPH").html("<p>The sharing feature will be connected later.</p>");
+            $("#sharesPH").html("<p>The sharing feature could not be loaded.</p>");
         }
 
         function addShareFunc() {
             let content = $("#shareTB").val().trim();
-
             if (content == "") {
                 swal("Empty", "Please write something to share", "warning");
                 return;
             }
 
-            let request = {
-                userId: user.userId,
-                countryId: countryId,
-                content: content
-            };
-
+            let request = { userId: user.userId, countryId: countryId, content: content };
             ajaxCall("POST", sharesApi, request, addShareSuccess, addShareError);
         }
 
@@ -299,113 +382,79 @@
         }
 
         function addShareError(err) {
-            console.log(err);
-
             if (err.status == 403) {
                 swal("Blocked", "The administrator blocked you from sharing content", "error");
             }
             else {
-                swal("Error", "Could not publish your share", "error");
+                error(err);
             }
         }
 
         function editShareFunc(shareId) {
             let currentText = $("#shareText_" + shareId).text();
             let newText = prompt("Edit your share:", currentText);
-
             if (newText == null || newText.trim() == "") {
                 return;
             }
 
-            let request = {
-                userId: user.userId,
-                content: newText.trim()
-            };
-
-            ajaxCall("PUT", sharesApi + "/" + shareId, request, loadSharesFunc, error);
+            ajaxCall("PUT", sharesApi + "/" + shareId,
+                { userId: user.userId, content: newText.trim() },
+                loadSharesFunc, error);
         }
 
         function deleteShareFunc(shareId) {
-            swal({
-                title: "Delete this share?",
-                icon: "warning",
-                buttons: true,
-                dangerMode: true
-            })
+            swal({ title: "Delete this share?", icon: "warning", buttons: true, dangerMode: true })
                 .then(function (willDelete) {
                     if (willDelete) {
-                        let api = sharesApi + "/" + shareId + "?userId=" + user.userId;
-                        ajaxCall("DELETE", api, null, loadSharesFunc, error);
+                        ajaxCall("DELETE", sharesApi + "/" + shareId + "?userId=" + user.userId, null, loadSharesFunc, error);
                     }
                 });
         }
     </script>
-
-    <style>
-        .country-details {
-            display: flex;
-            gap: 25px;
-            flex-wrap: wrap;
-            align-items: flex-start;
-        }
-
-        .country-information {
-            flex: 1;
-            min-width: 260px;
-        }
-
-        .details-table {
-            border-collapse: collapse;
-            margin-bottom: 15px;
-        }
-
-            .details-table td {
-                padding: 6px 14px 6px 0;
-                border-bottom: 1px solid #eee;
-            }
-
-                .details-table td:first-child {
-                    font-weight: bold;
-                    color: #1f4e79;
-                }
-
-        #listActionsPH {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            flex-wrap: wrap;
-            margin-top: 15px;
-        }
-
-        .saved-status {
-            font-weight: bold;
-            color: #1f4e79;
-        }
-    </style>
 </head>
 
 <body>
     <div class="page">
         <div id="menuPH"></div>
-
         <input type="button" id="backBTN" value="Back to countries" />
 
         <div id="detailsPH"></div>
+
+        <div id="editCountryDiv" class="card-box">
+            <h2>Edit country</h2>
+            <div class="form-grid">
+                <label>Name<input id="editNameTB" type="text" /></label>
+                <label>Native name<input id="editNativeNameTB" type="text" /></label>
+                <label>Alpha-2 code<input id="editAlpha2TB" type="text" maxlength="2" /></label>
+                <label>Alpha-3 code<input id="editAlpha3TB" type="text" maxlength="3" /></label>
+                <label>Numeric code<input id="editNumericTB" type="text" /></label>
+                <label>Capital<input id="editCapitalTB" type="text" /></label>
+                <label>Region<input id="editRegionTB" type="text" /></label>
+                <label>Subregion<input id="editSubregionTB" type="text" /></label>
+                <label>Population<input id="editPopulationTB" type="number" min="0" /></label>
+                <label>Area<input id="editAreaTB" type="number" min="0" step="0.01" /></label>
+                <label>Latitude<input id="editLatTB" type="number" step="0.000001" /></label>
+                <label>Longitude<input id="editLngTB" type="number" step="0.000001" /></label>
+                <label>SVG flag URL<input id="editFlagUrlTB" type="text" /></label>
+                <label>PNG flag URL<input id="editFlagPngTB" type="text" /></label>
+                <label>Flag emoji<input id="editFlagEmojiTB" type="text" /></label>
+                <label>Demonym<input id="editDemonymTB" type="text" /></label>
+                <label>Population density<input id="editDensityTB" type="number" min="0" step="0.01" /></label>
+            </div>
+            <button id="saveCountryChangesBTN" class="green-btn">Save changes</button>
+            <button id="cancelCountryChangesBTN">Cancel</button>
+        </div>
 
         <h2>Shares about this country</h2>
 
         <div id="shareFormDiv" class="card-box">
             <textarea id="shareTB" rows="3" maxlength="1000"
                       placeholder="Share an experience, a recommendation or a short review..."
-                      style="width:100%; padding:9px; border:1px solid #cfd8e3; border-radius:6px;"></textarea>
-
+                      style="width:100%; padding:9px; border:1px solid #cfd8e3; border-radius:6px; box-sizing:border-box;"></textarea>
             <input type="button" id="addShareBTN" value="Publish" />
         </div>
 
-        <p id="loginHintPH">
-            <a href="Login.html">Log in</a> to share your experience about this country.
-        </p>
-
+        <p id="loginHintPH"><a href="Login.html">Log in</a> to share your experience about this country.</p>
         <div id="sharesPH"></div>
     </div>
 </body>

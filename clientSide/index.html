@@ -2,10 +2,10 @@
 <html>
 <head>
     <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>World Countries</title>
 
     <link rel="stylesheet" href="style.css" />
-
     <link rel="stylesheet" href="https://cdn.datatables.net/1.10.19/css/jquery.dataTables.min.css" />
 
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
@@ -25,90 +25,124 @@
             $("#searchBTN").click(loadCountriesFunc);
             $("#clearBTN").click(clearFiltersFunc);
             $("#toggleViewBTN").click(toggleViewFunc);
+            $("#showAddCountryBTN").click(toggleAddCountryForm);
+            $("#cancelAddCountryBTN").click(toggleAddCountryForm);
+            $("#saveCountryBTN").click(addCountryFunc);
 
-            // search while typing
             $("#searchTB").on("input", loadCountriesFunc);
-            $("#regionDD, #sortByDD, #dirDD").change(loadCountriesFunc);
+            $("#regionDD, #languageDD, #currencyDD, #sortByDD, #dirDD")
+                .change(loadCountriesFunc);
+
+            $("#minPopulationTB, #maxPopulationTB, #minAreaTB, #maxAreaTB")
+                .on("change", loadCountriesFunc);
 
             $("#tableDiv").hide();
+            $("#addCountryDiv").hide();
+
+            if (isAdmin()) {
+                $("#adminCountryActions").show();
+            }
+            else {
+                $("#adminCountryActions").hide();
+            }
 
             loadFilterOptionsFunc();
             loadCountriesFunc();
         });
 
-        // =====================================================
-        // Filter options for the dropdowns
-        // =====================================================
-
         function loadFilterOptionsFunc() {
-            ajaxCall("GET", countriesApi + "/FilterOptions", null,
-                loadFilterOptionsSuccess, filterOptionsError);
+            ajaxCall(
+                "GET",
+                countriesApi + "/FilterOptions",
+                null,
+                loadFilterOptionsSuccess,
+                filterOptionsError
+            );
         }
 
         function loadFilterOptionsSuccess(options) {
-            let str = "<option value=''>All regions</option>";
-
+            let regions = "<option value=''>All regions</option>";
             for (let i = 0; i < options.regions.length; i++) {
-                str += `<option value="${options.regions[i]}">${options.regions[i]}</option>`;
+                regions += `<option value="${safeText(options.regions[i])}">${safeText(options.regions[i])}</option>`;
             }
+            $("#regionDD").html(regions);
 
-            $("#regionDD").html(str);
+            let languages = "<option value=''>All languages</option>";
+            for (let i = 0; i < options.languages.length; i++) {
+                let item = options.languages[i];
+                languages += `<option value="${safeText(item.languageCode)}">${safeText(item.languageName)}</option>`;
+            }
+            $("#languageDD").html(languages);
+
+            let currencies = "<option value=''>All currencies</option>";
+            for (let i = 0; i < options.currencies.length; i++) {
+                let item = options.currencies[i];
+                currencies += `<option value="${safeText(item.currencyCode)}">${safeText(item.currencyName)} (${safeText(item.currencyCode)})</option>`;
+            }
+            $("#currencyDD").html(currencies);
+
+            $("#minPopulationTB").attr("placeholder", "Min population: " + formatNumber(options.minPopulation));
+            $("#maxPopulationTB").attr("placeholder", "Max population: " + formatNumber(options.maxPopulation));
+            $("#minAreaTB").attr("placeholder", "Min area: " + formatNumber(options.minArea));
+            $("#maxAreaTB").attr("placeholder", "Max area: " + formatNumber(options.maxArea));
         }
 
         function filterOptionsError(err) {
-            // the page still works without the dropdown values
             console.log(err);
         }
 
-        // =====================================================
-        // Load countries
-        // =====================================================
+        function nullableNumber(selector) {
+            let value = $(selector).val().trim();
+            return value === "" ? "" : value;
+        }
 
         function loadCountriesFunc() {
-            let query = "?search=" + encodeURIComponent($("#searchTB").val().trim()) +
-                "&region=" + encodeURIComponent($("#regionDD").val()) +
-                "&sortBy=" + $("#sortByDD").val() +
-                "&dir=" + $("#dirDD").val();
+            let query =
+                "?search=" + encodeURIComponent($("#searchTB").val().trim()) +
+                "&region=" + encodeURIComponent($("#regionDD").val() || "") +
+                "&language=" + encodeURIComponent($("#languageDD").val() || "") +
+                "&currency=" + encodeURIComponent($("#currencyDD").val() || "") +
+                "&minPopulation=" + encodeURIComponent(nullableNumber("#minPopulationTB")) +
+                "&maxPopulation=" + encodeURIComponent(nullableNumber("#maxPopulationTB")) +
+                "&minArea=" + encodeURIComponent(nullableNumber("#minAreaTB")) +
+                "&maxArea=" + encodeURIComponent(nullableNumber("#maxAreaTB")) +
+                "&sortBy=" + encodeURIComponent($("#sortByDD").val()) +
+                "&dir=" + encodeURIComponent($("#dirDD").val());
 
             ajaxCall("GET", countriesApi + query, null, getCountriesSuccess, error);
         }
 
         function getCountriesSuccess(countriesData) {
             countries = countriesData;
-
-            $("#countPH").html("Found " + countries.length + " countries");
-
+            $("#countPH").text("Found " + countries.length + " countries");
             renderCards(countries);
             buildDataTable(countries);
         }
 
         function renderCards(countriesData) {
-            if (countriesData.length == 0) {
+            if (countriesData.length === 0) {
                 $("#cardsPH").html("<h3>No countries were found</h3>");
                 return;
             }
 
             let str = "";
-
             for (let i = 0; i < countriesData.length; i++) {
                 let country = countriesData[i];
+                let flag = country.flagUrl || country.flagPngUrl || "";
 
                 str += `
                         <div class="country-card">
-                            <img src="${safeText(country.flagUrl)}" alt="Flag of ${safeText(country.name)}" />
-
+                            <img src="${safeText(flag)}" alt="Flag of ${safeText(country.name)}" />
                             <div class="card-body">
                                 <h3>${safeText(country.name)}</h3>
                                 <p>Capital: ${safeText(country.capital)}</p>
                                 <p>Region: ${safeText(country.region)}</p>
+                                <p>Languages: ${safeText(country.languages)}</p>
+                                <p>Currencies: ${safeText(country.currencies)}</p>
                                 <p>Population: ${formatNumber(country.population)}</p>
-
-                                <button onclick="openCountryFunc(${country.countryId})">
-                                    View details
-                                </button>
+                                <button onclick="openCountryFunc(${country.countryId})">View details</button>
                             </div>
-                        </div>
-                    `;
+                        </div>`;
             }
 
             $("#cardsPH").html(str);
@@ -117,10 +151,6 @@
         function openCountryFunc(countryId) {
             window.location.href = "country.html?id=" + countryId;
         }
-
-        // =====================================================
-        // Table view (DataTables)
-        // =====================================================
 
         function buildDataTable(countriesData) {
             if (tbl != null) {
@@ -134,24 +164,23 @@
                 columns: [
                     {
                         data: "flagUrl",
-                        render: function (data) {
-                            return `<img src="${data}" width="50" />`;
+                        render: function (data, type, row) {
+                            let flag = data || row.flagPngUrl || "";
+                            return `<img src="${safeText(flag)}" width="50" alt="flag" />`;
                         }
                     },
                     { data: "name" },
                     { data: "capital" },
                     { data: "region" },
+                    { data: "languages" },
+                    { data: "currencies" },
                     {
                         data: "population",
-                        render: function (data) {
-                            return formatNumber(data);
-                        }
+                        render: function (data) { return formatNumber(data); }
                     },
                     {
                         data: "area",
-                        render: function (data) {
-                            return formatNumber(data);
-                        }
+                        render: function (data) { return formatNumber(data); }
                     },
                     {
                         data: "countryId",
@@ -179,12 +208,78 @@
         }
 
         function clearFiltersFunc() {
-            $("#searchTB").val("");
-            $("#regionDD").val("");
+            $("#searchTB, #minPopulationTB, #maxPopulationTB, #minAreaTB, #maxAreaTB").val("");
+            $("#regionDD, #languageDD, #currencyDD").val("");
             $("#sortByDD").val("name");
             $("#dirDD").val("asc");
-
             loadCountriesFunc();
+        }
+
+        function toggleAddCountryForm() {
+            if (!isAdmin()) {
+                swal("Not allowed", "Only an administrator can manage countries", "error");
+                return;
+            }
+
+            $("#addCountryDiv").slideToggle();
+        }
+
+        function numberValue(selector) {
+            let value = Number($(selector).val());
+            return Number.isFinite(value) ? value : 0;
+        }
+
+        function buildCountryFromAddForm() {
+            let area = numberValue("#addAreaTB");
+            let population = numberValue("#addPopulationTB");
+            let density = numberValue("#addDensityTB");
+
+            if (density === 0 && area > 0) {
+                density = population / area;
+            }
+
+            return {
+                countryId: 0,
+                name: $("#addNameTB").val().trim(),
+                nativeName: $("#addNativeNameTB").val().trim(),
+                alpha2Code: $("#addAlpha2TB").val().trim().toUpperCase(),
+                alpha3Code: $("#addAlpha3TB").val().trim().toUpperCase(),
+                numericCode: $("#addNumericTB").val().trim(),
+                capital: $("#addCapitalTB").val().trim(),
+                region: $("#addRegionTB").val().trim(),
+                subregion: $("#addSubregionTB").val().trim(),
+                population: population,
+                area: area,
+                lat: numberValue("#addLatTB"),
+                lng: numberValue("#addLngTB"),
+                flagUrl: $("#addFlagUrlTB").val().trim(),
+                flagPngUrl: $("#addFlagPngTB").val().trim(),
+                flagEmoji: $("#addFlagEmojiTB").val().trim(),
+                demonym: $("#addDemonymTB").val().trim(),
+                populationDensity: density,
+                languages: "",
+                currencies: "",
+                languageList: [],
+                currencyList: []
+            };
+        }
+
+        function addCountryFunc() {
+            let country = buildCountryFromAddForm();
+
+            if (country.name === "" || country.alpha2Code.length !== 2 || country.alpha3Code.length !== 3) {
+                swal("Invalid information", "Name, a two-letter code and a three-letter code are required", "warning");
+                return;
+            }
+
+            ajaxCall("POST", countriesApi, country, addCountrySuccess, error);
+        }
+
+        function addCountrySuccess(countryId) {
+            swal("Saved", "The country was added", "success")
+                .then(function () {
+                    window.location.href = "country.html?id=" + countryId;
+                });
         }
     </script>
 </head>
@@ -193,14 +288,22 @@
     <div class="page">
         <div id="menuPH"></div>
 
-        <h1>World Countries</h1>
+        <div class="page-title-row">
+            <h1>World Countries</h1>
+            <div id="adminCountryActions">
+                <button id="showAddCountryBTN" class="green-btn">Add country</button>
+            </div>
+        </div>
 
-        <div class="controls">
-            <input id="searchTB" type="text" placeholder="Search by name or capital" />
-
-            <select id="regionDD">
-                <option value="">All regions</option>
-            </select>
+        <div class="controls country-filter-controls">
+            <input id="searchTB" type="text" placeholder="Name or capital" />
+            <select id="regionDD"><option value="">All regions</option></select>
+            <select id="languageDD"><option value="">All languages</option></select>
+            <select id="currencyDD"><option value="">All currencies</option></select>
+            <input id="minPopulationTB" type="number" min="0" placeholder="Min population" />
+            <input id="maxPopulationTB" type="number" min="0" placeholder="Max population" />
+            <input id="minAreaTB" type="number" min="0" step="0.01" placeholder="Min area" />
+            <input id="maxAreaTB" type="number" min="0" step="0.01" placeholder="Max area" />
 
             <select id="sortByDD">
                 <option value="name">Sort by name</option>
@@ -218,8 +321,32 @@
             <input type="button" id="toggleViewBTN" value="Table View" />
         </div>
 
-        <p id="countPH"></p>
+        <div id="addCountryDiv" class="card-box">
+            <h2>Add a country manually</h2>
+            <div class="form-grid">
+                <label>Name<input id="addNameTB" type="text" /></label>
+                <label>Native name<input id="addNativeNameTB" type="text" /></label>
+                <label>Alpha-2 code<input id="addAlpha2TB" type="text" maxlength="2" /></label>
+                <label>Alpha-3 code<input id="addAlpha3TB" type="text" maxlength="3" /></label>
+                <label>Numeric code<input id="addNumericTB" type="text" /></label>
+                <label>Capital<input id="addCapitalTB" type="text" /></label>
+                <label>Region<input id="addRegionTB" type="text" /></label>
+                <label>Subregion<input id="addSubregionTB" type="text" /></label>
+                <label>Population<input id="addPopulationTB" type="number" min="0" /></label>
+                <label>Area<input id="addAreaTB" type="number" min="0" step="0.01" /></label>
+                <label>Latitude<input id="addLatTB" type="number" step="0.000001" /></label>
+                <label>Longitude<input id="addLngTB" type="number" step="0.000001" /></label>
+                <label>SVG flag URL<input id="addFlagUrlTB" type="text" /></label>
+                <label>PNG flag URL<input id="addFlagPngTB" type="text" /></label>
+                <label>Flag emoji<input id="addFlagEmojiTB" type="text" /></label>
+                <label>Demonym<input id="addDemonymTB" type="text" /></label>
+                <label>Population density<input id="addDensityTB" type="number" min="0" step="0.01" /></label>
+            </div>
+            <button id="saveCountryBTN" class="green-btn">Save country</button>
+            <button id="cancelAddCountryBTN">Cancel</button>
+        </div>
 
+        <p id="countPH"></p>
         <div id="cardsPH" class="countries-grid"></div>
 
         <div id="tableDiv">
@@ -230,6 +357,8 @@
                         <th>Name</th>
                         <th>Capital</th>
                         <th>Region</th>
+                        <th>Languages</th>
+                        <th>Currencies</th>
                         <th>Population</th>
                         <th>Area</th>
                         <th></th>

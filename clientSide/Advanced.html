@@ -1,39 +1,57 @@
 ﻿<!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="utf-8" />
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0" />
+
     <title>Advanced Features - World Countries</title>
 
+    <!-- Shared project style -->
     <link rel="stylesheet" href="style.css" />
 
+    <!-- jQuery -->
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+    <!-- SweetAlert -->
     <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
 
+    <!-- Shared project JavaScript -->
     <script src="ajaxCalls.js"></script>
     <script src="common.js"></script>
 
     <script>
         $(document).ready(function () {
+
+            // Builds the common navigation menu.
             buildMenu("advanced");
 
+            // Open the interactive map.
             $("#mapBTN").click(function () {
                 window.location.href = "Map.html";
             });
 
-            $("#quizBTN").click(function () {
-                window.location.href = "Quiz.html";
-            });
-
+            // Open the shares page.
             $("#sharesBTN").click(function () {
                 window.location.href = "Shares.html";
             });
 
-            $("#listsBTN").click(function () {
+            // Open the AI page.
+            // The AI Advisor requires a logged-in user.
+            $("#aiBTN").click(function () {
+
                 if (isLoggedIn()) {
-                    window.location.href = "MyLists.html";
+                    window.location.href = "AIAdvisor.html";
                 }
                 else {
-                    window.location.href = "Login.html";
+                    swal(
+                        "Login required",
+                        "Please log in before using the AI Country Advisor.",
+                        "warning"
+                    ).then(function () {
+                        window.location.href = "Login.html";
+                    });
                 }
             });
         });
@@ -41,12 +59,18 @@
 
     <style>
         .advanced-intro {
-            margin-bottom: 18px;
+            margin-bottom: 20px;
+            padding: 18px;
+            background-color: white;
+            border-left: 5px solid #2e74b5;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
             font-size: 17px;
+            line-height: 1.6;
         }
 
         .advanced-card {
-            margin-bottom: 18px;
+            margin-bottom: 20px;
         }
 
             .advanced-card h2 {
@@ -55,50 +79,100 @@
             }
 
             .advanced-card p {
-                line-height: 1.5;
+                line-height: 1.6;
             }
 
             .advanced-card ul {
-                line-height: 1.5;
+                line-height: 1.7;
+                padding-left: 28px;
+            }
+
+            .advanced-card li {
+                margin-bottom: 5px;
             }
 
             .advanced-card input[type="button"] {
-                margin-top: 8px;
+                margin-top: 10px;
             }
 
-        .technical-list li {
-            margin-bottom: 7px;
+        .feature-flow {
+            background-color: #f1f5fb;
+            border-radius: 8px;
+            padding: 14px;
+            margin-top: 15px;
         }
 
-        .feature-label {
+            .feature-flow strong {
+                color: #1f4e79;
+            }
+
+        .ai-warning {
+            margin-top: 15px;
+            padding: 12px;
+            background-color: #fff8e1;
+            border-left: 4px solid #f4b400;
+            border-radius: 6px;
+            line-height: 1.5;
+        }
+
+        .technology-tag {
+            display: inline-block;
+            padding: 5px 10px;
+            margin: 3px;
+            background-color: #e7eef9;
+            color: #1f4e79;
+            border-radius: 14px;
+            font-size: 14px;
             font-weight: bold;
+        }
+
+        @media screen and (max-width: 700px) {
+            .advanced-intro {
+                font-size: 15px;
+            }
+
+            .advanced-card {
+                padding: 15px;
+            }
+
+                .advanced-card h2 {
+                    font-size: 21px;
+                }
         }
     </style>
 </head>
 
 <body>
     <div class="page">
+
+        <!-- The shared navigation menu is inserted here -->
         <div id="menuPH"></div>
 
         <h1>Advanced Features</h1>
-        <h1 style="color:red;">NEW ADVANCED PAGE TEST</h1>
-        <p class="advanced-intro">
-            In addition to the required basic functionality, the following
-            advanced features were added to the World Countries system.
-        </p>
 
-        <!-- Interactive map -->
+        <div class="advanced-intro">
+            In addition to the required project functionality, the
+            World Countries system includes the following advanced features.
+        </div>
+
+
+        <!-- =====================================================
+             FEATURE 1: INTERACTIVE WORLD MAP
+             ===================================================== -->
         <div class="card-box advanced-card">
+
             <h2>1. Interactive World Map</h2>
 
             <p>
-                The system includes an interactive world map created with the
-                <strong>Leaflet</strong> library and OpenStreetMap.
+                The system includes an interactive world map implemented with
+                <strong>Leaflet</strong> and <strong>OpenStreetMap</strong>.
             </p>
 
             <p>
-                Every country is displayed according to the latitude and
-                longitude saved in the database during the countries import.
+                The latitude and longitude of every country are imported on the
+                server side from the
+                <strong>countries.dev</strong> API and stored in SQL Server.
+                These coordinates are used to display the countries on the map.
             </p>
 
             <ul>
@@ -107,222 +181,238 @@
                 </li>
 
                 <li>
-                    Countries can be searched by country name or capital city.
+                    Users can search for a country by its name or capital city.
                 </li>
 
                 <li>
-                    The map can be filtered by region.
+                    The map can be filtered by geographic region.
                 </li>
 
                 <li>
-                    Clicking a marker displays the flag, capital, region,
-                    population and a link to the full country page.
+                    Each marker displays the country's flag, name, capital,
+                    region and population.
+                </li>
+
+                <li>
+                    Clicking a marker provides a link to the complete country
+                    details page.
                 </li>
             </ul>
+
+            <div class="feature-flow">
+                <strong>Data flow:</strong>
+                countries.dev → ASP.NET server → SQL Server →
+                Countries API → Leaflet map
+            </div>
+
+            <p>
+                <span class="technology-tag">Leaflet</span>
+                <span class="technology-tag">OpenStreetMap</span>
+                <span class="technology-tag">SQL Server</span>
+                <span class="technology-tag">AJAX</span>
+            </p>
 
             <input type="button"
                    id="mapBTN"
                    value="Go to the map" />
+
         </div>
 
-        <!-- Quizzes -->
+
+        <!-- =====================================================
+             FEATURE 2: LIVE SHARES
+             ===================================================== -->
         <div class="card-box advanced-card">
-            <h2>2. Timed Country Quizzes</h2>
+
+            <h2>2. Live Shares Updates</h2>
 
             <p>
-                Registered users can complete timed quizzes about countries,
-                capitals, currencies, regions and country codes.
+                The sharing page supports automatic updates using
+                client-side <strong>polling</strong>.
+            </p>
+
+            <p>
+                While live updates are enabled, the client sends a request to
+                the ASP.NET server every ten seconds. New content can therefore
+                appear without requiring the user to refresh the browser page.
             </p>
 
             <ul>
                 <li>
-                    Quiz information and questions are loaded from the database.
+                    Shared content is refreshed automatically every ten seconds.
                 </li>
 
                 <li>
-                    Every quiz has a time limit.
+                    Shares can be filtered according to a selected country.
                 </li>
 
                 <li>
-                    Answers are checked by the server.
+                    Users can search inside the shared text.
                 </li>
 
                 <li>
-                    The score and number of correct answers are saved after
-                    completion.
+                    Users may update or delete only content that they created.
                 </li>
 
                 <li>
-                    Users can view their previous attempts and total quiz
-                    points.
+                    Each share displays its author, country and publication
+                    date.
+                </li>
+
+                <li>
+                    Administrators can delete inappropriate shared content.
                 </li>
             </ul>
 
-            <input type="button"
-                   id="quizBTN"
-                   value="Go to quizzes" />
-        </div>
-
-        <!-- Polling -->
-        <div class="card-box advanced-card">
-            <h2>3. Live Shares Updates</h2>
+            <div class="feature-flow">
+                <strong>Live update flow:</strong>
+                JavaScript timer → GET request → ASP.NET Controller →
+                SQL Server → updated shares displayed on the page
+            </div>
 
             <p>
-                The shares page supports automatic live updates using
-                <strong>polling</strong>.
+                <span class="technology-tag">Polling</span>
+                <span class="technology-tag">jQuery</span>
+                <span class="technology-tag">REST API</span>
+                <span class="technology-tag">SQL Server</span>
             </p>
-
-            <p>
-                When live updates are enabled, the client requests updated
-                information from the server every 10 seconds. New shares can
-                therefore appear without manually refreshing the page.
-            </p>
-
-            <ul>
-                <li>
-                    Shares can be filtered by country.
-                </li>
-
-                <li>
-                    Users can search inside the share content.
-                </li>
-
-                <li>
-                    A user may edit or delete only their own shares.
-                </li>
-
-                <li>
-                    Shares display the user, country and publication date.
-                </li>
-            </ul>
 
             <input type="button"
                    id="sharesBTN"
                    value="Go to shares" />
+
         </div>
 
-        <!-- Personal lists -->
+
+        <!-- =====================================================
+             FEATURE 3: AI COUNTRY ADVISOR
+             ===================================================== -->
         <div class="card-box advanced-card">
-            <h2>4. Personal Country Lists</h2>
+
+            <h2>3. AI Country Advisor</h2>
 
             <p>
-                Every registered user can create personal lists of countries.
+                The system contains an artificial-intelligence module that
+                combines country information stored in SQL Server with an AI
+                language model.
+            </p>
+
+            <p>
+                A registered user selects a country and submits a question.
+                The user can request a travel plan, cultural overview,
+                geographic explanation or other country-related information.
             </p>
 
             <ul>
                 <li>
-                    Countries can be added to a
-                    <strong>Visited</strong> list.
+                    The user selects a country stored in the project database.
                 </li>
 
                 <li>
-                    Countries can be added to a
-                    <strong>Want to visit</strong> list.
+                    The ASP.NET server validates the user and loads the selected
+                    country's information from SQL Server.
                 </li>
 
                 <li>
-                    A country can be moved from one list to the other.
+                    The server creates a prompt containing the country name,
+                    capital, region, languages, currencies, population and area.
                 </li>
 
                 <li>
-                    Saved countries can be removed from the lists.
+                    The prompt and the user's question are sent from the server
+                    to the AI service.
                 </li>
 
                 <li>
-                    Every saved item contains the date on which it was added.
+                    The generated answer is returned through the ASP.NET API and
+                    displayed on the client page.
+                </li>
+
+                <li>
+                    The OpenAI API key is stored only on the server and is never
+                    exposed in the HTML or JavaScript files.
                 </li>
             </ul>
+
+            <div class="feature-flow">
+                <strong>AI request flow:</strong>
+                AIAdvisor.html → AIController → Country model →
+                DBservices → SQL Server → AIService → OpenAI API →
+                generated answer
+            </div>
+
+            <p>
+                <span class="technology-tag">Artificial Intelligence</span>
+                <span class="technology-tag">OpenAI API</span>
+                <span class="technology-tag">ASP.NET</span>
+                <span class="technology-tag">SQL Server</span>
+            </p>
+
+            <div class="ai-warning">
+                <strong>Important:</strong>
+                AI-generated information may contain mistakes. Users should
+                verify current visa requirements, safety information, prices,
+                opening hours, transportation details and other time-sensitive
+                information before travelling.
+            </div>
 
             <input type="button"
-                   id="listsBTN"
-                   value="Go to my lists" />
+                   id="aiBTN"
+                   value="Open the AI Country Advisor" />
+
         </div>
 
-        <!-- Import and country information -->
+
+        <!-- =====================================================
+             SUMMARY
+             ===================================================== -->
         <div class="card-box advanced-card">
-            <h2>5. Countries API and Database Import</h2>
+
+            <h2>Technical Summary</h2>
 
             <p>
-                Country information is collected on the server side from the
-                <strong>countries.dev</strong> API.
-            </p>
-
-            <p>
-                The imported information is converted into the system's country
-                model and stored in SQL Server.
+                The advanced features are integrated with the project's existing
+                three-layer architecture.
             </p>
 
             <ul>
                 <li>
-                    Country names, codes, capitals and regions.
+                    The client pages are implemented with HTML, CSS,
+                    JavaScript, jQuery and AJAX.
                 </li>
 
                 <li>
-                    Population, area and coordinates.
+                    ASP.NET Controllers receive HTTP requests from the client.
                 </li>
 
                 <li>
-                    Flags and demonyms.
+                    Model classes contain the system's business functionality.
                 </li>
 
                 <li>
-                    Multiple languages for each country.
+                    The DAL communicates with MS SQL Server through stored
+                    procedures.
                 </li>
 
                 <li>
-                    Multiple currencies for each country.
+                    External services are accessed only from the server side.
+                </li>
+
+                <li>
+                    The client never receives database credentials or secret
+                    API keys.
                 </li>
             </ul>
+
+            <p>
+                <span class="technology-tag">Three Layers</span>
+                <span class="technology-tag">ASP.NET Core</span>
+                <span class="technology-tag">Stored Procedures</span>
+                <span class="technology-tag">Responsive Design</span>
+            </p>
+
         </div>
 
-        <!-- Technical information -->
-        <div class="card-box advanced-card">
-            <h2>6. Technical Highlights</h2>
-
-            <ul class="technical-list">
-                <li>
-                    <span class="feature-label">Password security:</span>
-                    passwords are stored as hashes and are never saved as plain
-                    text in the database.
-                </li>
-
-                <li>
-                    <span class="feature-label">Three-layer architecture:</span>
-                    the Controllers, Models and DAL have separate
-                    responsibilities.
-                </li>
-
-                <li>
-                    <span class="feature-label">Stored procedures:</span>
-                    database operations are performed using SQL Server stored
-                    procedures with parameters.
-                </li>
-
-                <li>
-                    <span class="feature-label">REST API:</span>
-                    the client communicates with the ASP.NET server using GET,
-                    POST, PUT and DELETE requests.
-                </li>
-
-                <li>
-                    <span class="feature-label">AJAX:</span>
-                    client requests are sent through the shared
-                    <code>ajaxCall</code> function.
-                </li>
-
-                <li>
-                    <span class="feature-label">Local storage:</span>
-                    the logged-in user's information is retained between client
-                    pages.
-                </li>
-
-                <li>
-                    <span class="feature-label">Dynamic rendering:</span>
-                    countries, personal lists, shares, quizzes and map markers
-                    are generated from server responses.
-                </li>
-            </ul>
-        </div>
     </div>
 </body>
 </html>

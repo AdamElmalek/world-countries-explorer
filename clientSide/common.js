@@ -1,12 +1,11 @@
-﻿
-const SERVER = "https://proj.ruppin.ac.il/cgroup137/test2/tar1";
-
+﻿const SERVER = "https://localhost:7242";
 const usersApi = SERVER + "/api/Users";
 const countriesApi = SERVER + "/api/Countries";
 const listsApi = SERVER + "/api/Lists";
 const sharesApi = SERVER + "/api/Shares";
 const quizApi = SERVER + "/api/Quiz";
 const adminApi = SERVER + "/api/Admin";
+const aiApi = SERVER + "/api/AI";
 
 
 
@@ -83,7 +82,8 @@ function buildMenu(activePage) {
         ["Shares.html", "Shares", "shares", false],
         ["Quiz.html", "Quiz", "quiz", true],
         ["Map.html", "Map", "map", false],
-        ["Advanced.html", "Advanced Features", "advanced", false]
+        ["Advanced.html", "Advanced Features", "advanced", false],
+        ["AIAdvisor.html", "AI Advisor", "ai", true]
     ];
 
     let str = "<div class='top-row'><div class='menu-links'>";
