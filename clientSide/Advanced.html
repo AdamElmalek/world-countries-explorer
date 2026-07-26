@@ -8,39 +8,28 @@
 
     <title>Advanced Features - World Countries</title>
 
-    <!-- Shared project style -->
     <link rel="stylesheet" href="style.css" />
 
-    <!-- jQuery -->
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 
-    <!-- SweetAlert -->
     <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
 
-    <!-- Shared project JavaScript -->
     <script src="ajaxCalls.js"></script>
     <script src="common.js"></script>
 
     <script>
         $(document).ready(function () {
-
-            // Builds the common navigation menu.
             buildMenu("advanced");
 
-            // Open the interactive map.
             $("#mapBTN").click(function () {
                 window.location.href = "Map.html";
             });
 
-            // Open the shares page.
             $("#sharesBTN").click(function () {
                 window.location.href = "Shares.html";
             });
 
-            // Open the AI page.
-            // The AI Advisor requires a logged-in user.
             $("#aiBTN").click(function () {
-
                 if (isLoggedIn()) {
                     window.location.href = "AIAdvisor.html";
                 }
@@ -145,7 +134,6 @@
 <body>
     <div class="page">
 
-        <!-- The shared navigation menu is inserted here -->
         <div id="menuPH"></div>
 
         <h1>Advanced Features</h1>
@@ -155,10 +143,6 @@
             World Countries system includes the following advanced features.
         </div>
 
-
-        <!-- =====================================================
-             FEATURE 1: INTERACTIVE WORLD MAP
-             ===================================================== -->
         <div class="card-box advanced-card">
 
             <h2>1. Interactive World Map</h2>
@@ -218,10 +202,6 @@
 
         </div>
 
-
-        <!-- =====================================================
-             FEATURE 2: LIVE SHARES
-             ===================================================== -->
         <div class="card-box advanced-card">
 
             <h2>2. Live Shares Updates</h2>
@@ -283,10 +263,6 @@
 
         </div>
 
-
-        <!-- =====================================================
-             FEATURE 3: AI COUNTRY ADVISOR
-             ===================================================== -->
         <div class="card-box advanced-card">
 
             <h2>3. AI Country Advisor</h2>
@@ -362,10 +338,6 @@
 
         </div>
 
-
-        <!-- =====================================================
-             SUMMARY
-             ===================================================== -->
         <div class="card-box advanced-card">
 
             <h2>Technical Summary</h2>
