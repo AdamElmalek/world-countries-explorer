@@ -9,6 +9,7 @@
         public int SharesCount { get; set; }
         public int SavedCountriesCount { get; set; }
         public int CompletedQuizAttemptsCount { get; set; }
+        public int LoginsToday { get; set; }
 
     }
 }
